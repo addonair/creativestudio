@@ -1,5 +1,5 @@
 // ============================================================
-// EMAIL — Nodemailer with branded templates
+// EMAIL — SMTP (local) + Brevo HTTP API (production fallback)
 // ============================================================
 
 const nodemailer = require('nodemailer');
@@ -8,12 +8,8 @@ let transporter = null;
 
 function getTransporter() {
     if (transporter) return transporter;
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('⚠️  Email not configured. Set SMTP_USER and SMTP_PASS in .env.');
-        return null;
-    }
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
 
-    // Try Gmail service mode first (works on most hosting platforms)
     if (!process.env.SMTP_HOST || process.env.SMTP_HOST === 'smtp.gmail.com') {
         transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -30,6 +26,44 @@ function getTransporter() {
         });
     }
     return transporter;
+}
+
+// ---- Brevo HTTP API (works when SMTP is blocked) ----
+async function sendViaBrevo({ to, subject, html, from, replyTo, attachments }) {
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) return null;
+
+    const body = {
+        sender: { name: from.replace(/<.*>/, '').replace(/"/g, '').trim(), email: process.env.SMTP_USER || process.env.NOTIFY_EMAIL },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+    };
+    if (replyTo) body.replyTo = { email: replyTo };
+
+    // Handle attachments (convert file to base64)
+    if (attachments && attachments.length) {
+        const fs = require('fs');
+        body.attachment = attachments.map(a => ({
+            name: a.filename,
+            content: fs.readFileSync(a.path).toString('base64'),
+        }));
+    }
+
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'accept': 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Brevo API error (${res.status}): ${err}`);
+    }
+
+    const data = await res.json();
+    console.log(`📧 [Brevo] Email sent to ${to}: messageId=${data.messageId || 'ok'}`);
+    return data;
 }
 
 // Social platform display — email-safe icons (no font-awesome in emails)
@@ -149,25 +183,32 @@ function brandedHTML(bodyHTML, settings = {}) {
  * @param {Object} options - { to, subject, html, replyTo?, attachments?, settings? }
  */
 async function sendEmail({ to, subject, html, replyTo, attachments, settings }) {
+    const companyName = (settings && settings.company_name) || 'CreativeStudio';
+    const fromField = `"${companyName}" <${process.env.SMTP_USER || process.env.NOTIFY_EMAIL}>`;
+
+    // Try Brevo HTTP API first (works on Render and other platforms that block SMTP)
+    if (process.env.BREVO_API_KEY) {
+        try {
+            const result = await sendViaBrevo({ to, subject, html, from: fromField, replyTo, attachments });
+            if (result) return result;
+        } catch (e) {
+            console.warn('⚠️ Brevo failed, trying SMTP:', e.message);
+        }
+    }
+
+    // Fallback to SMTP (works locally)
     const transport = getTransporter();
     if (!transport) {
         console.log(`📧 [EMAIL SKIPPED] To: ${to} | Subject: ${subject}`);
         return { skipped: true };
     }
 
-    // Always use company name from settings — never the hardcoded SMTP_FROM
-    const companyName = (settings && settings.company_name) || 'CreativeStudio';
-    const fromField = `"${companyName}" <${process.env.SMTP_USER}>`;
-
-    const mailOpts = {
-        from: fromField,
-        to, subject, html,
-    };
+    const mailOpts = { from: fromField, to, subject, html };
     if (replyTo) mailOpts.replyTo = replyTo;
     if (attachments && attachments.length) mailOpts.attachments = attachments;
 
     const result = await transport.sendMail(mailOpts);
-    console.log(`📧 Email sent to ${to}: ${result.messageId}`);
+    console.log(`📧 [SMTP] Email sent to ${to}: ${result.messageId}`);
     return result;
 }
 
