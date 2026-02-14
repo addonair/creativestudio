@@ -8,17 +8,27 @@ let transporter = null;
 
 function getTransporter() {
     if (transporter) return transporter;
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
-        console.warn('⚠️  Email not configured. Set SMTP variables in .env.');
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.warn('⚠️  Email not configured. Set SMTP_USER and SMTP_PASS in .env.');
         return null;
     }
-    transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-         family: 4,
-    });
+
+    // Try Gmail service mode first (works on most hosting platforms)
+    if (!process.env.SMTP_HOST || process.env.SMTP_HOST === 'smtp.gmail.com') {
+        transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            family: 4,
+        });
+    } else {
+        transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT) || 587,
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            family: 4,
+        });
+    }
     return transporter;
 }
 
