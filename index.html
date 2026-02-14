@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreativeStudio | Design & Motion Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://js.paystack.co/v2/inline.js"></script>
+</head>
+<body>
+
+    <!-- ==================== HEADER ==================== -->
+    <header id="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">Creative<span>.</span>Studio</a>
+                <div class="nav-links" id="navMenu">
+                    <a href="#services">Services</a>
+                    <a href="#portfolio">Portfolio</a>
+                    <a href="#about">About</a>
+                    <a href="#testimonials">Reviews</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="nav-cta">
+                    <button class="currency-toggle" id="currencyToggle" title="Switch currency"><span class="cur-active">USD</span> / <span>GHS</span></button>
+                    <a href="#tracker" class="btn btn-outline btn-sm" style="font-size:.78rem;padding:.4rem .8rem">Track Booking</a>
+                    <a href="#booking" class="btn btn-primary">Start Project <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></a>
+                    <button class="hamburger"><i class="fas fa-bars"></i></button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==================== HERO ==================== -->
+    <section class="hero" id="home">
+        <div class="hero-decoration"></div>
+        <div class="hero-decoration-2"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-label"><span class="dot"></span> Available for new projects</div>
+                <h1>Transform Your Vision Into <em>Stunning</em> Visuals</h1>
+                <p>Professional graphic design and video editing services that elevate your brand and captivate your audience. Fast turnaround, premium quality.</p>
+                <div class="hero-btns">
+                    <a href="#booking" class="btn btn-warm">Start Your Project <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></a>
+                    <a href="#portfolio" class="btn btn-outline">View Portfolio</a>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number"><span id="projectCount">0</span><span class="suffix">+</span></div>
+                        <div class="stat-label">Projects Delivered</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number"><span id="clientCount">0</span><span class="suffix">+</span></div>
+                        <div class="stat-label">Happy Clients</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number"><span id="turnaroundTime">0</span><span class="suffix">h</span></div>
+                        <div class="stat-label">Avg. Turnaround</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SERVICES ==================== -->
+    <section class="section section-light" id="services">
+        <div class="container">
+            <div class="section-header reveal">
+                <div class="section-tag">What we do</div>
+                <h2>Our Services</h2>
+                <p class="section-subtitle">Comprehensive creative solutions tailored to help your brand stand out.</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card reveal reveal-d1">
+                    <div class="service-icon-wrap"><i class="fas fa-palette"></i></div>
+                    <h3>Graphic Design</h3>
+                    <p>Professional designs that communicate your brand's message effectively.</p>
+                    <ul class="service-features"><li>Logo & Brand Identity</li><li>Social Media Graphics</li><li>Print Materials</li><li>Marketing Collateral</li></ul>
+                    <div class="price-tag service-price" data-usd="199">From $199</div>
+                    <a href="#booking" class="btn btn-outline">Get Started</a>
+                </div>
+                <div class="service-card reveal reveal-d2">
+                    <div class="service-icon-wrap"><i class="fas fa-film"></i></div>
+                    <h3>Motion Graphics</h3>
+                    <p>Engaging animations that bring your ideas to life and capture attention.</p>
+                    <ul class="service-features"><li>Explainer Videos</li><li>Animated Logos</li><li>Kinetic Typography</li><li>Product Demos</li></ul>
+                    <div class="price-tag service-price" data-usd="349">From $349</div>
+                    <a href="#booking" class="btn btn-outline">Get Started</a>
+                </div>
+                <div class="service-card reveal reveal-d3">
+                    <div class="service-icon-wrap"><i class="fas fa-video"></i></div>
+                    <h3>Video Editing</h3>
+                    <p>Professional editing that transforms raw footage into compelling stories.</p>
+                    <ul class="service-features"><li>Long-form Editing</li><li>Color Grading</li><li>Sound Design</li><li>Special Effects</li></ul>
+                    <div class="price-tag service-price" data-usd="249">From $249</div>
+                    <a href="#booking" class="btn btn-outline">Get Started</a>
+                </div>
+                <div class="service-card reveal reveal-d4">
+                    <div class="service-icon-wrap"><i class="fas fa-crown"></i></div>
+                    <h3>Branding Packages</h3>
+                    <p>Complete brand identity that establishes a cohesive presence everywhere.</p>
+                    <ul class="service-features"><li>Logo Design</li><li>Color Palette</li><li>Typography System</li><li>Brand Guidelines</li></ul>
+                    <div class="price-tag service-price" data-usd="599">From $599</div>
+                    <a href="#booking" class="btn btn-outline">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PORTFOLIO ==================== -->
+    <section class="section" id="portfolio">
+        <div class="container">
+            <div class="section-header reveal"><div class="section-tag">Selected work</div><h2>Our Portfolio</h2></div>
+            <div class="portfolio-filters reveal">
+                <button class="filter-btn active" data-filter="all">All Work</button>
+                <button class="filter-btn" data-filter="graphic">Graphic Design</button>
+                <button class="filter-btn" data-filter="motion">Motion Graphics</button>
+                <button class="filter-btn" data-filter="video">Video Editing</button>
+                <button class="filter-btn" data-filter="branding">Branding</button>
+            </div>
+            <div class="portfolio-grid reveal">
+                <div class="portfolio-item" data-category="graphic">
+                    <img src="https://images.unsplash.com/photo-1634942537034-2531766767d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Brand Identity">
+                    <div class="portfolio-overlay"><div class="portfolio-tags"><span class="portfolio-tag">Logo</span><span class="portfolio-tag">Brand Identity</span></div><h3>NovaTech Brand Identity</h3></div>
+                </div>
+                <div class="portfolio-item" data-category="motion">
+                    <img src="https://images.unsplash.com/photo-1626785774625-0b1c2c4eab67?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Motion Graphics">
+                    <div class="portfolio-overlay"><div class="portfolio-tags"><span class="portfolio-tag">Animation</span><span class="portfolio-tag">Motion</span></div><h3>Explainer Video Animation</h3></div>
+                </div>
+                <div class="portfolio-item" data-category="video">
+                    <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Video Editing">
+                    <div class="portfolio-overlay"><div class="portfolio-tags"><span class="portfolio-tag">Video</span><span class="portfolio-tag">Color Grading</span></div><h3>Corporate Video Production</h3></div>
+                </div>
+                <div class="portfolio-item" data-category="branding">
+                    <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Branding">
+                    <div class="portfolio-overlay"><div class="portfolio-tags"><span class="portfolio-tag">Branding</span></div><h3>Restaurant Rebranding</h3></div>
+                </div>
+                <div class="portfolio-item" data-category="graphic">
+                    <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Poster Design">
+                    <div class="portfolio-overlay"><div class="portfolio-tags"><span class="portfolio-tag">Poster</span><span class="portfolio-tag">Print</span></div><h3>Event Poster Series</h3></div>
+                </div>
+                <div class="portfolio-item" data-category="motion">
+                    <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Logo Animation">
+                    <div class="portfolio-overlay"><div class="portfolio-tags"><span class="portfolio-tag">Logo Animation</span></div><h3>Animated Logo Reveal</h3></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== ABOUT ==================== -->
+    <section class="section section-light" id="about">
+        <div class="container">
+            <div class="section-header reveal"><div class="section-tag">Who we are</div><h2>About <em>the Studio</em></h2></div>
+            <div class="about-content">
+                <div class="about-image-wrap reveal">
+                    <div class="about-image"></div>
+                    <div class="about-badge"><div class="num">5+</div><div class="lbl">Years Exp.</div></div>
+                </div>
+                <div class="about-text reveal reveal-d2">
+                    <h3>Creative Professional with a Passion for Excellence</h3>
+                    <p id="about-p1">With years of experience in the creative industry, I specialize in transforming ideas into visually stunning realities. My approach combines artistic vision with technical expertise.</p>
+                    <p id="about-p2">I've worked with startups, established brands, and agencies across various industries, helping them communicate effectively through design and motion.</p>
+                    <div class="skills-list">
+                        <div class="skill-item"><div class="skill-header"><span>Graphic Design</span><span>95%</span></div><div class="skill-bar"><div class="skill-progress" data-width="95"></div></div></div>
+                        <div class="skill-item"><div class="skill-header"><span>Motion Graphics</span><span>90%</span></div><div class="skill-bar"><div class="skill-progress" data-width="90"></div></div></div>
+                        <div class="skill-item"><div class="skill-header"><span>Video Editing</span><span>88%</span></div><div class="skill-bar"><div class="skill-progress" data-width="88"></div></div></div>
+                        <div class="skill-item"><div class="skill-header"><span>Branding</span><span>92%</span></div><div class="skill-bar"><div class="skill-progress" data-width="92"></div></div></div>
+                    </div>
+                    <div class="tools-grid">
+                        <div class="tool-chip"><i class="fab fa-adobe"></i> Photoshop</div>
+                        <div class="tool-chip"><i class="fab fa-figma"></i> Figma</div>
+                        <div class="tool-chip"><i class="fas fa-pen-nib"></i> Illustrator</div>
+                        <div class="tool-chip"><i class="fas fa-magic"></i> After Effects</div>
+                        <div class="tool-chip"><i class="fas fa-cut"></i> Premiere Pro</div>
+                        <div class="tool-chip"><i class="fas fa-cube"></i> Cinema 4D</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== TESTIMONIALS ==================== -->
+    <section class="section" id="testimonials">
+        <div class="container">
+            <div class="section-header reveal"><div class="section-tag">Client feedback</div><h2>What Our Clients Say</h2></div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card reveal reveal-d1">
+                    <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <div class="testimonial-text">"The design exceeded my expectations. Fast, professional, and incredibly creative. My brand has never looked this good."</div>
+                    <div class="testimonial-author-row"><div class="testimonial-avatar">S</div><div><div class="testimonial-author">Sarah Johnson</div><div class="testimonial-role">CEO, TechStart</div></div></div>
+                </div>
+                <div class="testimonial-card reveal reveal-d2">
+                    <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <div class="testimonial-text">"Outstanding video editing! They transformed our raw footage into a cinematic masterpiece. Highly recommended."</div>
+                    <div class="testimonial-author-row"><div class="testimonial-avatar">M</div><div><div class="testimonial-author">Michael Chen</div><div class="testimonial-role">Marketing Director, Vibe Co</div></div></div>
+                </div>
+                <div class="testimonial-card reveal reveal-d3">
+                    <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    <div class="testimonial-text">"The branding package was worth every penny. Cohesive, modern, and perfectly aligned with our vision."</div>
+                    <div class="testimonial-author-row"><div class="testimonial-avatar">E</div><div><div class="testimonial-author">Emily Rodriguez</div><div class="testimonial-role">Founder, Bloom Studio</div></div></div>
+                </div>
+            </div>
+            <!-- Review form -->
+            <div class="review-form-section reveal" style="margin-top:4rem;max-width:700px;margin-left:auto;margin-right:auto;">
+                <div class="review-form-wrap" style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="padding:2rem 2.5rem 0"><h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--navy);margin-bottom:.3rem;font-weight:600">Share Your Experience</h3><p style="color:var(--text-muted);font-size:.9rem">Worked with us? Your review will be published after approval.</p></div>
+                    <form id="review-form" style="padding:1.5rem 2.5rem 2.5rem">
+                        <input type="hidden" id="review-rating" value="5">
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Name *</label><input type="text" id="review-name" class="form-control" placeholder="Your name" required></div>
+                            <div class="form-group"><label class="form-label">Email *</label><input type="email" id="review-email" class="form-control" placeholder="your@email.com" required></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Company</label><input type="text" id="review-company" class="form-control" placeholder="Optional"></div>
+                            <div class="form-group"><label class="form-label">Role</label><input type="text" id="review-role" class="form-control" placeholder="Optional"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Rating</label><div class="star-rating" style="display:flex;gap:.3rem;padding:.5rem 0"><button type="button" class="star-btn active" data-value="1" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--warm);padding:.1rem"><i class="fas fa-star"></i></button><button type="button" class="star-btn active" data-value="2" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--warm);padding:.1rem"><i class="fas fa-star"></i></button><button type="button" class="star-btn active" data-value="3" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--warm);padding:.1rem"><i class="fas fa-star"></i></button><button type="button" class="star-btn active" data-value="4" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--warm);padding:.1rem"><i class="fas fa-star"></i></button><button type="button" class="star-btn active" data-value="5" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:var(--warm);padding:.1rem"><i class="fas fa-star"></i></button></div></div>
+                            <div class="form-group"><label class="form-label">Service Used</label><select id="review-service" class="form-control"><option value="">Select...</option><option value="Graphic Design">Graphic Design</option><option value="Motion Graphics">Motion Graphics</option><option value="Video Editing">Video Editing</option><option value="Branding Package">Branding Package</option></select></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Your Review *</label><textarea id="review-text" class="form-control" rows="4" placeholder="Tell us about your experience..." required></textarea></div>
+                        <button type="submit" class="btn btn-primary"><span class="btn-text">Submit Review</span> <i class="fas fa-paper-plane" style="font-size:.8rem"></i> <span class="spinner"></span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CTA BANNER ==================== -->
+    <div class="cta-banner">
+        <div class="container">
+            <h2 class="reveal">Ready to Elevate Your Brand?</h2>
+            <p class="reveal reveal-d1">Let's create something remarkable together.</p>
+            <a href="#booking" class="btn btn-warm reveal reveal-d2">Get Started Now <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></a>
+        </div>
+    </div>
+
+    <!-- ==================== BOOKING TRACKER ==================== -->
+    <section class="section" id="tracker">
+        <div class="container">
+            <div class="section-header reveal" style="text-align:center">
+                <div class="section-tag" style="justify-content:center">Track your project</div>
+                <h2>Track My Booking</h2>
+                <p class="section-subtitle" style="margin-left:auto;margin-right:auto">Enter your booking reference to check your project status.</p>
+            </div>
+            <div class="tracker-wrap reveal" style="max-width:500px;margin:0 auto">
+                <div class="tracker-form" style="display:flex;gap:.8rem;margin-bottom:1.5rem">
+                    <input type="text" id="tracker-ref" class="form-control" placeholder="e.g. CS-ABC12345" style="flex:1">
+                    <button class="btn btn-warm" id="tracker-btn" onclick="trackBooking()"><i class="fas fa-search"></i> Track</button>
+                </div>
+                <div id="tracker-result" style="display:none"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== BOOKING ==================== -->
+    <section class="section section-light" id="booking">
+        <div class="container">
+            <div class="section-header reveal" style="text-align:center;">
+                <div class="section-tag" style="justify-content:center;">Book a project</div>
+                <h2>Start Your Project</h2>
+                <p class="section-subtitle" style="margin-left:auto;margin-right:auto;">Complete the form and pay securely via Paystack.</p>
+            </div>
+            <div class="booking-wrapper reveal">
+                <div class="steps-indicator" id="stepsIndicator">
+                    <div class="step active" data-step="1"><div class="step-number">1</div><div class="step-label">Service</div></div>
+                    <div class="step" data-step="2"><div class="step-number">2</div><div class="step-label">Details</div></div>
+                    <div class="step" data-step="3"><div class="step-number">3</div><div class="step-label">Add-ons</div></div>
+                    <div class="step" data-step="4"><div class="step-number">4</div><div class="step-label">Payment</div></div>
+                </div>
+
+                <!-- Step 1: Service -->
+                <div class="booking-step active" id="step-1">
+                    <h3>Choose Your Service</h3>
+                    <p>Select the service that best fits your needs.</p>
+                    <div class="form-group">
+                        <label class="form-label">Service Type</label>
+                        <select class="form-control" id="service-type">
+                            <option value="">Select a service...</option>
+                            <option value="graphic" data-price="199">Graphic Design — $199</option>
+                            <option value="motion" data-price="349">Motion Graphics — $349</option>
+                            <option value="video" data-price="249">Video Editing — $249</option>
+                            <option value="branding" data-price="599">Branding Package — $599</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project Description</label>
+                        <textarea class="form-control" id="project-desc" rows="4" placeholder="Tell us about your project..."></textarea>
+                    </div>
+                    <div class="booking-footer">
+                        <div></div>
+                        <button class="btn btn-primary next-step" data-next="2"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Details -->
+                <div class="booking-step" id="step-2">
+                    <h3>Your Details</h3>
+                    <p>Tell us about yourself and your timeline.</p>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-control" id="client-name" placeholder="Your name" required></div>
+                        <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-control" id="client-email" placeholder="your@email.com" required></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <div style="display:flex;gap:.4rem">
+                                <select class="form-control" id="phone-code" style="width:100px;flex-shrink:0">
+                                    <option value="+233">🇬🇭 +233</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+49">🇩🇪 +49</option>
+                                    <option value="+33">🇫🇷 +33</option>
+                                    <option value="+234">🇳🇬 +234</option>
+                                    <option value="+254">🇰🇪 +254</option>
+                                    <option value="+27">🇿🇦 +27</option>
+                                    <option value="+971">🇦🇪 +971</option>
+                                    <option value="+91">🇮🇳 +91</option>
+                                    <option value="+86">🇨🇳 +86</option>
+                                    <option value="+81">🇯🇵 +81</option>
+                                    <option value="+61">🇦🇺 +61</option>
+                                    <option value="+55">🇧🇷 +55</option>
+                                </select>
+                                <input type="tel" class="form-control" id="client-phone" placeholder="024 123 4567" style="flex:1">
+                            </div>
+                            <div style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">Ghana: 10 digits. International clients: select your country code.</div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-control" id="client-deadline"></div>
+                    </div>
+                    <div class="booking-footer">
+                        <button class="btn btn-outline prev-step" data-prev="1">Back</button>
+                        <button class="btn btn-primary next-step" data-next="3"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Add-ons -->
+                <div class="booking-step" id="step-3">
+                    <h3>Add-ons</h3>
+                    <p>Enhance your project with optional extras.</p>
+                    <div class="addons-list">
+                        <div class="addon-item" data-price="49"><div class="addon-info"><div class="addon-checkbox"></div><div><h4>Rush Delivery</h4><p>Get your project 50% faster</p></div></div><div class="addon-price" data-usd="49">+$49</div></div>
+                        <div class="addon-item" data-price="79"><div class="addon-info"><div class="addon-checkbox"></div><div><h4>Source Files</h4><p>Full editable source files</p></div></div><div class="addon-price" data-usd="79">+$79</div></div>
+                        <div class="addon-item" data-price="29"><div class="addon-info"><div class="addon-checkbox"></div><div><h4>Extra Revisions</h4><p>3 additional rounds</p></div></div><div class="addon-price" data-usd="29">+$29</div></div>
+                        <div class="addon-item" data-price="99"><div class="addon-info"><div class="addon-checkbox"></div><div><h4>Social Media Kit</h4><p>Assets for all platforms</p></div></div><div class="addon-price" data-usd="99">+$99</div></div>
+                    </div>
+                    <div class="total-section">
+                        <div class="total-row"><span>Base Service</span><span id="base-price">$0</span></div>
+                        <div class="total-row"><span>Add-ons</span><span id="addons-total">$0</span></div>
+                        <div class="total-row total"><span>Total</span><span id="grand-total">$0</span></div>
+                    </div>
+                    <div class="booking-footer">
+                        <button class="btn btn-outline prev-step" data-prev="2">Back</button>
+                        <button class="btn btn-primary next-step" data-next="4"><span class="btn-text">Continue</span> <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Payment -->
+                <div class="booking-step" id="step-4">
+                    <h3>Confirm & Pay</h3>
+                    <p>Review your order and pay securely via Paystack.</p>
+                    <div class="total-section" style="margin-bottom:1.5rem">
+                        <div class="total-row"><span>Service</span><span id="summary-service">—</span></div>
+                        <div class="total-row"><span>Add-ons</span><span id="summary-addons">$0</span></div>
+                        <div class="total-row total"><span>Total Due</span><span id="summary-total">$0</span></div>
+                    </div>
+                    <div class="form-check" style="margin-bottom:1.5rem">
+                        <input type="checkbox" class="form-check-input" id="agree-terms">
+                        <label class="form-check-label" for="agree-terms">I agree to the <a href="/terms" target="_blank">Terms & Conditions</a></label>
+                    </div>
+                    <div class="booking-footer">
+                        <button class="btn btn-outline prev-step" data-prev="3">Back</button>
+                        <button class="btn btn-warm" id="pay-btn"><i class="fas fa-lock" style="font-size:0.8rem"></i> <span class="btn-text">Pay Securely</span> <span class="spinner"></span></button>
+                    </div>
+                </div>
+
+                <!-- Payment result screens -->
+                <div class="payment-status" id="payment-success">
+                    <div class="payment-status-icon success"><i class="fas fa-check"></i></div>
+                    <h3>Payment Successful!</h3>
+                    <p>Thank you! We've received your payment and project details.<br>You'll get a confirmation email shortly.</p>
+                    <div class="payment-ref" id="payment-ref"></div>
+                </div>
+                <div class="payment-status" id="payment-error">
+                    <div class="payment-status-icon error"><i class="fas fa-times"></i></div>
+                    <h3>Payment Cancelled</h3>
+                    <p>Your payment was not completed. You can try again or contact us.</p>
+                    <button class="btn btn-outline" style="margin-top:1.5rem" onclick="resetBooking()">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CONTACT ==================== -->
+    <section class="section" id="contact">
+        <div class="container">
+            <div class="section-header reveal"><div class="section-tag">Get in touch</div><h2>Let's Talk</h2></div>
+            <div class="contact-content">
+                <div class="contact-info reveal">
+                    <h3>Have a project in mind?</h3>
+                    <p>Drop us a message and let's bring your creative vision to life. We typically respond within 24 hours.</p>
+                    <div class="contact-item"><div class="contact-icon"><i class="fas fa-envelope"></i></div><div><h4>Email</h4><a href="mailto:hello@creativestudio.com">hello@creativestudio.com</a></div></div>
+                    <div class="contact-item"><div class="contact-icon"><i class="fas fa-phone"></i></div><div><h4>Phone</h4><a href="tel:+233000000000">+233 (0) 00 000 0000</a></div></div>
+                    <div class="contact-item"><div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div><div><h4>Location</h4><p class="address-text">Accra, Ghana — Available Worldwide</p></div></div>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-behance"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-dribbble"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="contact-form-wrap reveal reveal-d2">
+                    <form id="contact-form">
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Name *</label><input type="text" name="name" class="form-control" placeholder="Your name" required></div>
+                            <div class="form-group"><label class="form-label">Email *</label><input type="email" name="email" class="form-control" placeholder="your@email.com" required></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Subject</label><input type="text" name="subject" class="form-control" placeholder="Project inquiry"></div>
+                        <div class="form-group"><label class="form-label">Message *</label><textarea name="message" class="form-control" rows="5" placeholder="Tell us about your project..." required></textarea></div>
+                        <button type="submit" class="btn btn-primary" style="width:100%"><span class="btn-text">Send Message</span> <i class="fas fa-paper-plane" style="font-size:0.8rem"></i> <span class="spinner"></span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Creative<span style="color:var(--warm)">.</span>Studio</h3>
+                    <p>Professional design and video editing services that help businesses stand out.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-behance"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-dribbble"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#portfolio">Portfolio</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Services</h3>
+                    <ul class="footer-links">
+                        <li><a href="#services">Graphic Design</a></li>
+                        <li><a href="#services">Motion Graphics</a></li>
+                        <li><a href="#services">Video Editing</a></li>
+                        <li><a href="#services">Branding Packages</a></li>
+                        <li><a href="#booking">Book a Project</a></li>
+                        <li><a href="/terms">Terms & Conditions</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Newsletter</h3>
+                    <p>Subscribe for updates on new services and promotions.</p>
+                    <form class="newsletter-form">
+                        <input type="email" class="newsletter-input" placeholder="Your email" required>
+                        <button type="submit" class="newsletter-btn"><i class="fas fa-arrow-right"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>&copy; <span id="current-year"></span> CreativeStudio. All rights reserved.</p></div>
+        </div>
+    </footer>
+
+    <button class="scroll-top" id="scrollTop"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox-overlay" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="">
+            <div class="lightbox-video" id="lightbox-video" style="display:none"></div>
+        </div>
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

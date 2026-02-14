@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — CreativeStudio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root{--navy:#1a2744;--navy-deep:#0f1a2e;--navy-light:#2d4163;--warm:#c4854c;--warm-hover:#b3743e;--white:#fff;--text:#2c3040;--muted:#6b7080;--border:rgba(26,39,68,0.1);--success:#228b54;--error:#c83232;--r:8px}
+        *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Source Sans 3',sans-serif;background:#f4f5f7;color:var(--text);line-height:1.6}
+        .login-overlay{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:9999}.login-overlay.hidden{display:none}
+        .login-box{background:#fff;padding:3rem;border-radius:12px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}.login-box h2{font-size:1.5rem;color:var(--navy);margin-bottom:.3rem}.login-box>p{color:var(--muted);font-size:.9rem;margin-bottom:2rem}
+        .login-error{color:var(--error);font-size:.82rem;margin-bottom:1rem;display:none}
+        .sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--navy-deep);color:#fff;padding:1.2rem 0;overflow-y:auto;z-index:100}.sidebar-logo{padding:0 1.2rem 1.5rem;font-size:1.1rem;font-weight:700}.sidebar-logo span{color:var(--warm)}.sidebar-divider{height:1px;background:rgba(255,255,255,.06);margin:.5rem 1.2rem}.sidebar-label{padding:.8rem 1.2rem .3rem;font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.3);font-weight:600}
+        .sidebar-nav a{display:flex;align-items:center;gap:.7rem;padding:.6rem 1.2rem;color:rgba(255,255,255,.5);text-decoration:none;font-size:.84rem;font-weight:500;transition:all .2s}.sidebar-nav a:hover{color:#fff;background:rgba(255,255,255,.05)}.sidebar-nav a.active{color:#fff;background:rgba(255,255,255,.1);border-right:3px solid var(--warm)}.sidebar-nav a i{width:18px;text-align:center;font-size:.85rem}.sidebar-nav .badge{margin-left:auto;background:var(--warm);color:#fff;font-size:.65rem;padding:.1rem .45rem;border-radius:100px;font-weight:600}
+        .sidebar-bottom{position:absolute;bottom:.8rem;left:0;right:0;padding:0 1.2rem}.sidebar-bottom a{color:rgba(255,255,255,.35);font-size:.78rem;text-decoration:none;display:flex;align-items:center;gap:.5rem}
+        .main{margin-left:220px;padding:1.8rem 2rem;min-height:100vh}
+        .page-header{margin-bottom:1.8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.page-header h1{font-size:1.5rem;color:var(--navy);font-weight:700}
+        .field{margin-bottom:1.1rem}.field label{display:block;font-weight:600;font-size:.8rem;margin-bottom:.3rem;color:var(--text)}.field input,.field select,.field textarea{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:var(--r);font-family:inherit;font-size:.86rem;background:#fff}.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy)}.field .help{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+        .field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+        .color-field{display:flex;align-items:center;gap:.6rem}.color-field input[type=color]{width:40px;height:34px;border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;padding:2px}.color-field input[type=text]{flex:1}
+        .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.2rem;font-family:inherit;font-size:.83rem;font-weight:600;border:none;border-radius:var(--r);cursor:pointer;transition:all .2s;text-decoration:none}.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy-light)}.btn-warm{background:var(--warm);color:#fff}.btn-warm:hover{background:var(--warm-hover)}.btn-outline{background:#fff;color:var(--text);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--navy)}.btn-sm{padding:.3rem .65rem;font-size:.76rem}.btn-danger{background:#fee;color:var(--error);border:1px solid rgba(200,50,50,.2)}.btn-danger:hover{background:var(--error);color:#fff}.btn-success{background:#e8f5e9;color:var(--success);border:1px solid rgba(34,139,84,.2)}.btn-success:hover{background:var(--success);color:#fff}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:1.5rem}.stat-card{background:#fff;padding:1.3rem;border-radius:var(--r);border:1px solid var(--border)}.stat-card .lb{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:.3rem}.stat-card .vl{font-size:1.8rem;font-weight:700;color:var(--navy);line-height:1}
+        .card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1.3rem}.card-header{padding:.8rem 1.2rem;border-bottom:1px solid var(--border);font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center}.card-body{padding:1.5rem}
+        table{width:100%;border-collapse:collapse}th{text-align:left;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;padding:.7rem 1rem;background:#fafafa;border-bottom:1px solid var(--border);white-space:nowrap}td{padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#fafbfc}
+        .sb{display:inline-block;padding:.18rem .6rem;border-radius:100px;font-size:.7rem;font-weight:600}.sb-paid,.sb-confirmed,.sb-approved,.sb-visible{background:rgba(34,139,84,.1);color:var(--success)}.sb-pending{background:rgba(196,133,76,.15);color:var(--warm)}.sb-rejected,.sb-hidden{background:rgba(200,50,50,.1);color:var(--error)}.sb-unread{background:rgba(26,39,68,.08);color:var(--navy)}.sb-in-progress{background:rgba(30,100,200,.1);color:#1e64c8}.sb-delivered,.sb-completed{background:rgba(34,139,84,.1);color:var(--success)}
+        .empty{text-align:center;padding:2.5rem;color:var(--muted)}.empty i{font-size:2rem;display:block;margin-bottom:.8rem;opacity:.3}.pt{width:60px;height:44px;object-fit:cover;border-radius:4px;background:#f0f0f0}.tl{display:flex;gap:.3rem;flex-wrap:wrap}.tg{padding:.12rem .45rem;background:#f0f0f0;border-radius:4px;font-size:.7rem;color:var(--muted)}.ac{display:flex;gap:.25rem;flex-wrap:wrap}.stars{color:var(--warm);font-size:.78rem;letter-spacing:1px}.stars .dim{color:#ddd}.rp{max-width:220px;font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:500;padding:1rem}.modal-overlay.show{display:flex}.modal{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}.modal-lg{max-width:780px}.modal-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}.modal-header h3{font-size:1.05rem;color:var(--navy)}.modal-close{background:none;border:none;font-size:1.2rem;color:var(--muted);cursor:pointer}.modal-body{padding:1.5rem}.modal-footer{padding:.8rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.6rem}
+        .upload-area{border:2px dashed var(--border);border-radius:var(--r);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative}.upload-area:hover{border-color:var(--navy);background:#fafafa}.upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer}.upload-area i{font-size:1.3rem;color:var(--muted);margin-bottom:.4rem;display:block}.upload-area p{font-size:.78rem;color:var(--muted)}.upload-preview{max-height:100px;border-radius:4px;margin-top:.6rem;display:none}
+        .toast{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;padding:.8rem 1.2rem;background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.1);font-size:.88rem;display:none;align-items:center;gap:.6rem;max-width:380px}.toast.show{display:flex;animation:slideIn .3s ease}.toast.ok{border-left:3px solid var(--success)}.toast.err{border-left:3px solid var(--error)}@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+        .section{display:none}.section.active{display:block}.tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border)}.tab{padding:.6rem 1.2rem;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}.tab:hover{color:var(--text)}.tab.active{color:var(--navy);border-bottom-color:var(--warm)}
+        .svc-card{border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:.8rem;position:relative}.svc-card .svc-del{position:absolute;top:.5rem;right:.5rem}
+        @media(max-width:768px){.sidebar{width:100%;position:relative;height:auto;padding:.8rem 0}.sidebar-nav{display:flex;overflow-x:auto}.sidebar-nav a{padding:.5rem .8rem;white-space:nowrap;font-size:.75rem;border-right:none!important}.sidebar-bottom,.sidebar-label,.sidebar-divider{display:none}.main{margin-left:0;padding:1rem}.field-row,.field-row-3{grid-template-columns:1fr}td,th{padding:.4rem .5rem;font-size:.75rem}}
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay"><div class="login-box"><h2>Admin Login</h2><p>Sign in to manage your studio.</p><div class="login-error" id="loginError">Invalid credentials</div><form id="loginForm"><div class="field"><label>Username</label><input type="text" id="loginUser" required></div><div class="field"><label>Password</label><input type="password" id="loginPass" required></div><button type="submit" class="btn btn-primary" style="width:100%;margin-top:.5rem">Sign In</button></form></div></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-logo">Creative<span>.</span>Studio</div>
+    <nav class="sidebar-nav">
+        <a href="#" class="active" data-section="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+        <div class="sidebar-divider"></div><div class="sidebar-label">Content</div>
+        <a href="#" data-section="portfolio"><i class="fas fa-images"></i> Portfolio</a>
+        <a href="#" data-section="reviews"><i class="fas fa-star"></i> Reviews <span class="badge" id="reviewBadge" style="display:none">0</span></a>
+        <a href="#" data-section="pages"><i class="fas fa-file-alt"></i> Pages</a>
+        <div class="sidebar-divider"></div><div class="sidebar-label">Customers</div>
+        <a href="#" data-section="messages"><i class="fas fa-envelope"></i> Messages <span class="badge" id="msgBadge" style="display:none">0</span></a>
+        <a href="#" data-section="bookings"><i class="fas fa-calendar-check"></i> Bookings</a>
+        <a href="#" data-section="subscribers"><i class="fas fa-users"></i> Subscribers</a>
+        <div class="sidebar-divider"></div><div class="sidebar-label">Settings</div>
+        <a href="#" data-section="site-settings"><i class="fas fa-cog"></i> Site Settings</a>
+        <a href="#" data-section="appearance"><i class="fas fa-paint-brush"></i> Appearance</a>
+    </nav>
+    <div class="sidebar-bottom"><a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> View Website</a></div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="section active" id="sec-dashboard">
+    <div class="page-header"><h1>Dashboard</h1><button class="btn btn-outline" onclick="doBackup()"><i class="fas fa-database"></i> Backup DB</button></div>
+    <div class="stats-grid">
+        <div class="stat-card"><div class="lb">Bookings</div><div class="vl" id="sB">—</div></div>
+        <div class="stat-card" style="cursor:pointer" onclick="showRevenueCtrl()" title="Click to adjust revenue">
+            <div class="lb">Revenue <i class="fas fa-pen" style="font-size:.6rem;margin-left:4px;opacity:.5"></i></div><div class="vl" id="sR">—</div>
+        </div>
+        <div class="stat-card"><div class="lb">Unread</div><div class="vl" id="sM">—</div></div>
+        <div class="stat-card"><div class="lb">Subscribers</div><div class="vl" id="sS">—</div></div>
+        <div class="stat-card"><div class="lb">Portfolio</div><div class="vl" id="sP">—</div></div>
+        <div class="stat-card"><div class="lb">Pending Reviews</div><div class="vl" id="sPR">—</div></div>
+    </div>
+    <!-- Revenue Control (hidden by default) -->
+    <div id="revenueCtrl" style="display:none;margin-bottom:1.5rem">
+        <div class="card"><div class="card-body" style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+            <span style="font-size:.84rem;color:var(--muted)">Adjust displayed revenue:</span>
+            <div style="display:flex;align-items:center;gap:.5rem">
+                <span style="font-size:.78rem;color:var(--muted)">Bookings total: $<span id="rawRev">0</span></span>
+                <span style="font-size:.78rem;color:var(--muted)">+</span>
+                <input type="number" id="revOffset" value="0" style="width:120px;padding:.35rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem" placeholder="Offset">
+                <span style="font-size:.78rem;color:var(--muted)">= $<span id="revTotal">0</span></span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveRevenue()"><i class="fas fa-save"></i> Set</button>
+            <button class="btn btn-outline btn-sm" onclick="resetRevenue()"><i class="fas fa-undo"></i> Reset to 0</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('revenueCtrl').style.display='none'"><i class="fas fa-times"></i></button>
+        </div></div>
+    </div>
+    <div class="card"><div class="card-header">Recent Bookings</div><table><thead><tr><th>Client</th><th>Service</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="recentB"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table></div>
+</div>
+
+<!-- PORTFOLIO -->
+<div class="section" id="sec-portfolio">
+    <div class="page-header"><h1>Portfolio</h1><button class="btn btn-primary" onclick="openPM()"><i class="fas fa-plus"></i> Add Item</button></div>
+    <div class="card"><table><thead><tr><th>Image</th><th>Title</th><th>Category</th><th>Video</th><th>Visible</th><th>Actions</th></tr></thead><tbody id="pTbl"></tbody></table></div>
+</div>
+
+<!-- REVIEWS -->
+<div class="section" id="sec-reviews">
+    <div class="page-header"><h1>Reviews</h1></div>
+    <div class="card"><div class="card-header"><span>Client Reviews</span><div><button class="btn btn-outline btn-sm fR active" onclick="fRev('all',this)">All</button><button class="btn btn-outline btn-sm fR" onclick="fRev('pending',this)">Pending</button><button class="btn btn-outline btn-sm fR" onclick="fRev('approved',this)">Approved</button></div></div><table><thead><tr><th>Status</th><th>Rating</th><th>Client</th><th>Review</th><th>Service</th><th>Date</th><th>Actions</th></tr></thead><tbody id="rTbl"></tbody></table></div>
+</div>
+
+<!-- PAGES -->
+<div class="section" id="sec-pages">
+    <div class="page-header"><h1>Pages</h1></div>
+    <div class="card"><div class="card-header">Legal & Info Pages</div><table><thead><tr><th>Page</th><th>Last Updated</th><th>Actions</th></tr></thead><tbody id="pgTbl"></tbody></table></div>
+</div>
+
+<!-- MESSAGES -->
+<div class="section" id="sec-messages">
+    <div class="page-header"><h1>Messages</h1></div>
+    <div class="card"><table><thead><tr><th>Status</th><th>Name</th><th>Email</th><th>Subject</th><th>Date</th><th>Actions</th></tr></thead><tbody id="mTbl"></tbody></table></div>
+</div>
+
+<!-- BOOKINGS -->
+<div class="section" id="sec-bookings">
+    <div class="page-header"><h1>Bookings</h1><button class="btn btn-outline" style="color:var(--error);border-color:currentColor" onclick="clearAllBookings()"><i class="fas fa-trash-alt"></i> Clear All</button></div>
+    <div class="card"><table><thead><tr><th>Reference</th><th>Client</th><th>Service</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="bTbl"></tbody></table></div>
+</div>
+
+<!-- SUBSCRIBERS -->
+<div class="section" id="sec-subscribers">
+    <div class="page-header"><h1>Subscribers</h1></div>
+    <div class="card"><table><thead><tr><th>Email</th><th>Subscribed</th><th>Actions</th></tr></thead><tbody id="sTbl"></tbody></table></div>
+</div>
+
+<!-- SITE SETTINGS -->
+<div class="section" id="sec-site-settings">
+    <div class="page-header"><h1>Site Settings</h1><button class="btn btn-warm" onclick="saveSettings()"><i class="fas fa-save"></i> Save All</button></div>
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('branding',this)">Branding</div>
+        <div class="tab" onclick="showTab('contact',this)">Contact & Social</div>
+        <div class="tab" onclick="showTab('hero',this)">Hero Section</div>
+        <div class="tab" onclick="showTab('about',this)">About</div>
+        <div class="tab" onclick="showTab('services',this)">Services</div>
+        <div class="tab" onclick="showTab('invoice',this)">Email & Invoice</div>
+    </div>
+    <div class="tab-content active" id="tab-branding"><div class="card"><div class="card-body">
+        <div class="field-row"><div class="field"><label>Company Name</label><input type="text" id="s_company_name"></div><div class="field"><label>Tagline</label><input type="text" id="s_tagline"></div></div>
+        <div class="field"><label>Logo Image</label><div style="display:flex;gap:1rem"><div class="upload-area" style="flex:1"><input type="file" id="logoFile" accept="image/*"><i class="fas fa-cloud-upload-alt"></i><p>Upload logo</p><img class="upload-preview" id="logoPreview"></div><div style="flex:1"><label style="font-size:.78rem;color:var(--muted)">Or paste URL:</label><input type="text" id="s_logo_url" style="margin-top:.3rem"><button type="button" class="logo-clear-btn" id="clearLogoBtn" style="display:none" onclick="clearLogo()"><i class="fas fa-trash-alt"></i> Remove Logo</button></div></div></div>
+        <div class="field"><label>About Section Image</label><div style="display:flex;gap:1rem"><div class="upload-area" style="flex:1"><input type="file" id="aboutImgFile" accept="image/*"><i class="fas fa-cloud-upload-alt"></i><p>Upload image</p><img class="upload-preview" id="aboutImgPreview"></div><div style="flex:1"><label style="font-size:.78rem;color:var(--muted)">Or paste URL:</label><input type="text" id="s_about_image_url" style="margin-top:.3rem"></div></div></div>
+        <div class="field"><label>Footer Description</label><textarea id="s_footer_text" rows="2"></textarea></div>
+    </div></div></div>
+    <div class="tab-content" id="tab-contact" style="display:none"><div class="card"><div class="card-body">
+        <div class="field-row-3"><div class="field"><label>Email</label><input type="email" id="s_email"></div><div class="field"><label>Phone</label><input type="text" id="s_phone"></div><div class="field"><label>Address</label><input type="text" id="s_address"></div></div>
+        <h4 style="margin:1rem 0 .8rem;font-size:.9rem;color:var(--navy)">Social Media Links</h4>
+        <div class="field-row-3"><div class="field"><label><i class="fab fa-behance"></i> Behance</label><input type="text" id="s_social_behance"></div><div class="field"><label><i class="fab fa-dribbble"></i> Dribbble</label><input type="text" id="s_social_dribbble"></div><div class="field"><label><i class="fab fa-instagram"></i> Instagram</label><input type="text" id="s_social_instagram"></div></div>
+        <div class="field-row-3"><div class="field"><label><i class="fab fa-linkedin"></i> LinkedIn</label><input type="text" id="s_social_linkedin"></div><div class="field"><label><i class="fab fa-twitter"></i> Twitter/X</label><input type="text" id="s_social_twitter"></div><div class="field"><label><i class="fab fa-youtube"></i> YouTube</label><input type="text" id="s_social_youtube"></div></div>
+    </div></div></div>
+    <div class="tab-content" id="tab-hero" style="display:none"><div class="card"><div class="card-body">
+        <div class="field"><label>Hero Badge</label><input type="text" id="s_hero_badge"></div>
+        <div class="field"><label>Hero Title</label><input type="text" id="s_hero_title"><div class="help">Use &lt;em&gt;word&lt;/em&gt; for accent color</div></div>
+        <div class="field"><label>Hero Subtitle</label><textarea id="s_hero_subtitle" rows="2"></textarea></div>
+        <div class="field-row-3"><div class="field"><label>Projects Count</label><input type="number" id="s_stat_projects"></div><div class="field"><label>Clients Count</label><input type="number" id="s_stat_clients"></div><div class="field"><label>Turnaround (hrs)</label><input type="number" id="s_stat_turnaround"></div></div>
+        <div class="field-row"><div class="field"><label>CTA Title</label><input type="text" id="s_cta_title"></div><div class="field"><label>CTA Subtitle</label><input type="text" id="s_cta_subtitle"></div></div>
+        <div class="field"><label>USD to GHS Rate</label><input type="number" step="0.01" id="s_currency_rate"><div class="help">Used for the currency toggle on the site (e.g. 15.5)</div></div>
+    </div></div></div>
+    <div class="tab-content" id="tab-about" style="display:none"><div class="card"><div class="card-body">
+        <div class="field"><label>About Title</label><input type="text" id="s_about_title"></div>
+        <div class="field"><label>Paragraph 1</label><textarea id="s_about_text_1" rows="3"></textarea></div>
+        <div class="field"><label>Paragraph 2</label><textarea id="s_about_text_2" rows="3"></textarea></div>
+        <div class="field-row"><div class="field"><label>Years Badge (e.g. 5+)</label><input type="text" id="s_about_years"></div><div class="field"><label>Badge Label</label><input type="text" id="s_about_years_label" placeholder="Years Exp."></div></div>
+        <h4 style="margin:1.5rem 0 .8rem;font-size:.9rem;color:var(--navy)">Skill Bars</h4>
+        <div class="help" style="margin-bottom:.8rem">These show your proficiency in each area. Add, remove, or reorder as needed.</div>
+        <div id="skillsEditor"></div>
+        <button class="btn btn-outline btn-sm" onclick="addSkill()" style="margin-top:.5rem"><i class="fas fa-plus"></i> Add Skill</button>
+        <h4 style="margin:1.5rem 0 .8rem;font-size:.9rem;color:var(--navy)">Tools & Software</h4>
+        <div class="help" style="margin-bottom:.8rem">Tools you use. Icon format: <code>fab fa-adobe</code>, <code>fab fa-figma</code>, <code>fas fa-pen-nib</code>, etc.</div>
+        <div id="toolsEditor"></div>
+        <button class="btn btn-outline btn-sm" onclick="addTool()" style="margin-top:.5rem"><i class="fas fa-plus"></i> Add Tool</button>
+    </div></div></div>
+    <div class="tab-content" id="tab-invoice" style="display:none"><div class="card"><div class="card-body">
+        <h4 style="font-size:.9rem;color:var(--navy);margin:0 0 .5rem">Booking Confirmation Email</h4>
+        <div style="background:#faf8f5;border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.6">
+            Sent to the client immediately after payment. Your message + a booking details card + Track button + attached invoice PDF.<br>
+            <strong>Merge tags:</strong> <code>{{name}}</code> <code>{{service}}</code> <code>{{amount}}</code> <code>{{reference}}</code> <code>{{company}}</code>
+        </div>
+        <div class="field"><label>Subject Line</label><input type="text" id="s_email_subject_booking" placeholder="Booking Confirmed — #{{reference}}"></div>
+        <div class="field"><label>Message Body</label><textarea id="s_email_body_booking" rows="8" style="font-family:monospace;font-size:.82rem;line-height:1.7" placeholder="Hi {{name}}!&#10;&#10;Thank you for choosing us!"></textarea><div class="help">Use **bold** · Lines with • become bullets · Lines with 1. become numbered lists</div></div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+        <h4 style="font-size:.9rem;color:var(--navy);margin:0 0 .5rem">Status Update Emails</h4>
+        <div style="background:#faf8f5;border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.6">
+            When you change a booking's status, the client automatically gets a branded email with the updated invoice PDF attached.<br>
+            Each status has its own subject + message. Same merge tags as above plus <code>{{status}}</code>.
+        </div>
+
+        <!-- Confirmed -->
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1rem">
+            <h5 style="font-size:.82rem;font-weight:600;color:#1e64c8;margin:0 0 .6rem"><i class="fas fa-check-circle" style="margin-right:.3rem"></i> Confirmed</h5>
+            <div class="field"><label>Subject</label><input type="text" id="s_email_subject_confirmed" placeholder="Your Project is Confirmed — #{{reference}}"></div>
+            <div class="field"><label>Message</label><textarea id="s_email_body_confirmed" rows="5" style="font-family:monospace;font-size:.82rem;line-height:1.7" placeholder="Hi {{name}},&#10;&#10;Great news! Your project has been confirmed."></textarea></div>
+        </div>
+
+        <!-- In Progress -->
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1rem">
+            <h5 style="font-size:.82rem;font-weight:600;color:#1e64c8;margin:0 0 .6rem"><i class="fas fa-spinner" style="margin-right:.3rem"></i> In Progress</h5>
+            <div class="field"><label>Subject</label><input type="text" id="s_email_subject_in_progress" placeholder="Work Has Started on Your Project — #{{reference}}"></div>
+            <div class="field"><label>Message</label><textarea id="s_email_body_in_progress" rows="5" style="font-family:monospace;font-size:.82rem;line-height:1.7" placeholder="Hi {{name}},&#10;&#10;We've started working on your project!"></textarea></div>
+        </div>
+
+        <!-- Completed -->
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1rem">
+            <h5 style="font-size:.82rem;font-weight:600;color:#228b54;margin:0 0 .6rem"><i class="fas fa-flag-checkered" style="margin-right:.3rem"></i> Completed</h5>
+            <div class="field"><label>Subject</label><input type="text" id="s_email_subject_completed" placeholder="Your Project is Complete! — #{{reference}}"></div>
+            <div class="field"><label>Message</label><textarea id="s_email_body_completed" rows="5" style="font-family:monospace;font-size:.82rem;line-height:1.7" placeholder="Hi {{name}},&#10;&#10;Your project is complete!"></textarea></div>
+        </div>
+
+        <!-- Delivered -->
+        <div style="border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.2rem;margin-bottom:1rem">
+            <h5 style="font-size:.82rem;font-weight:600;color:#228b54;margin:0 0 .6rem"><i class="fas fa-paper-plane" style="margin-right:.3rem"></i> Delivered</h5>
+            <div class="field"><label>Subject</label><input type="text" id="s_email_subject_delivered" placeholder="Project Delivered — #{{reference}}"></div>
+            <div class="field"><label>Message</label><textarea id="s_email_body_delivered" rows="5" style="font-family:monospace;font-size:.82rem;line-height:1.7" placeholder="Hi {{name}},&#10;&#10;Your project has been delivered!"></textarea></div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+        <h4 style="font-size:.9rem;color:var(--navy);margin:0 0 .5rem">Invoice PDF</h4>
+        <div style="background:#faf8f5;border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;margin-bottom:1rem;font-size:.78rem;color:var(--muted);line-height:1.6">
+            The PDF uses your brand colors automatically. It shows your company name, contact info, booking details, and these notes. A new PDF is generated every time you change a booking's status.
+        </div>
+        <div class="field"><label>PDF Header Note (optional)</label><input type="text" id="s_pdf_header_note" placeholder="e.g. All prices in USD. Terms apply."><div class="help">Appears below your company info at the top of the invoice</div></div>
+        <div class="field"><label>PDF Footer Note</label><textarea id="s_pdf_footer_note" rows="2" placeholder="Thank you for your business!"></textarea><div class="help">Appears at the bottom of every invoice PDF</div></div>
+        <div class="field"><label>Invoice Notes (Email)</label><textarea id="s_invoice_notes" rows="2" placeholder="Thank you for your business! Payment is due upon receipt."></textarea><div class="help">Appears in the confirmation email (not on the PDF)</div></div>
+    </div></div></div>
+    <div class="tab-content" id="tab-services" style="display:none"><div class="card"><div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h4 style="font-size:.9rem;color:var(--navy)">Services</h4><button class="btn btn-primary btn-sm" onclick="addSvc()"><i class="fas fa-plus"></i> Add Service</button></div>
+        <div id="servicesEditor"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:2rem 0 1rem"><h4 style="font-size:.9rem;color:var(--navy)">Add-ons</h4><button class="btn btn-primary btn-sm" onclick="addAddon()"><i class="fas fa-plus"></i> Add Add-on</button></div>
+        <div id="addonsEditor"></div>
+    </div></div></div>
+</div>
+
+<!-- APPEARANCE -->
+<div class="section" id="sec-appearance">
+    <div class="page-header"><h1>Appearance</h1><div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn btn-outline" onclick="resetAppearance()"><i class="fas fa-undo"></i> Reset to Default</button><button class="btn btn-warm" onclick="saveSettings()"><i class="fas fa-save"></i> Save</button></div></div>
+
+    <!-- COLOR PRESETS -->
+    <div class="card" style="margin-bottom:1rem">
+        <div class="card-header"><span>Color Presets — Click to apply</span></div>
+        <div class="card-body" style="padding:.8rem 1rem">
+            <div id="presetGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem"></div>
+        </div>
+    </div>
+
+    <div class="card"><div class="card-body">
+        <h4 style="margin-bottom:1rem;color:var(--navy)">Colors</h4>
+        <div class="field-row-3"><div class="field"><label>Primary</label><div class="color-field"><input type="color" id="c_color_primary"><input type="text" id="s_color_primary"></div><div class="help">Main brand color (nav, headings, buttons)</div></div><div class="field"><label>Primary Light</label><div class="color-field"><input type="color" id="c_color_primary_light"><input type="text" id="s_color_primary_light"></div><div class="help">Hover states & secondary elements</div></div><div class="field"><label>Accent</label><div class="color-field"><input type="color" id="c_color_accent"><input type="text" id="s_color_accent"></div><div class="help">Highlights, links, prices</div></div></div>
+        <div class="field-row-3"><div class="field"><label>Background</label><div class="color-field"><input type="color" id="c_color_background"><input type="text" id="s_color_background"></div><div class="help">Page background</div></div><div class="field"><label>Text</label><div class="color-field"><input type="color" id="c_color_text"><input type="text" id="s_color_text"></div><div class="help">Main body text</div></div><div class="field"><label>Muted Text</label><div class="color-field"><input type="color" id="c_color_text_muted"><input type="text" id="s_color_text_muted"></div><div class="help">Secondary/lighter text</div></div></div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+        <h4 style="margin-bottom:1rem;color:var(--navy)">Typography</h4>
+        <div class="field-row-3"><div class="field"><label>Headings Font</label><select id="s_font_headings"><option>Playfair Display</option><option>Poppins</option><option>Montserrat</option><option>Lora</option><option>Merriweather</option><option>DM Serif Display</option><option>Raleway</option><option>Outfit</option><option>Sora</option></select></div><div class="field"><label>Body Font</label><select id="s_font_body"><option>Source Sans 3</option><option>Inter</option><option>Open Sans</option><option>Lato</option><option>Roboto</option><option>Nunito</option><option>DM Sans</option><option>Plus Jakarta Sans</option><option>Work Sans</option></select></div><div class="field"><label>Accent Font</label><select id="s_font_accent"><option>IBM Plex Mono</option><option>JetBrains Mono</option><option>Fira Code</option><option>Source Code Pro</option><option>Space Mono</option></select></div></div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+        <h4 style="margin-bottom:1rem;color:var(--navy)">Shapes & Corners</h4>
+        <div class="field-row-3">
+            <div class="field"><label>Card Radius (px)</label><input type="range" min="0" max="24" id="s_border_radius" oninput="this.nextElementSibling.textContent=this.value+'px'"><span class="help" style="font-weight:600">8px</span></div>
+            <div class="field"><label>Large Radius (px)</label><input type="range" min="0" max="30" id="s_border_radius_large" oninput="this.nextElementSibling.textContent=this.value+'px'"><span class="help" style="font-weight:600">12px</span></div>
+            <div class="field"><label>Button Radius (px)</label><input type="range" min="0" max="50" id="s_btn_radius" oninput="this.nextElementSibling.textContent=this.value+'px'"><span class="help" style="font-weight:600">8px</span><div class="help">0 = square · 8 = rounded · 50 = pill</div></div>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+        <h4 style="margin-bottom:1rem;color:var(--navy)">Layout & Effects</h4>
+        <div class="field-row-3">
+            <div class="field"><label>Section Spacing</label><select id="s_section_spacing"><option value="compact">Compact</option><option value="normal" selected>Normal</option><option value="spacious">Spacious</option></select><div class="help">Vertical space between sections</div></div>
+            <div class="field"><label>Shadow Style</label><select id="s_shadow_style"><option value="none">No Shadows</option><option value="subtle">Subtle</option><option value="normal" selected>Normal</option><option value="bold">Bold / Heavy</option></select><div class="help">Card and element shadows</div></div>
+            <div class="field"></div>
+        </div>
+    </div></div>
+</div>
+</div>
+
+<!-- PORTFOLIO MODAL -->
+<div class="modal-overlay" id="portfolioModal"><div class="modal"><div class="modal-header"><h3 id="pmTitle">Add Item</h3><button class="modal-close" onclick="cM('portfolioModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="editId">
+    <div class="field"><label>Title *</label><input type="text" id="pTitle"></div>
+    <div class="field-row"><div class="field"><label>Category *</label><select id="pCat"><option value="graphic">Graphic Design</option><option value="motion">Motion Graphics</option><option value="video">Video Editing</option><option value="branding">Branding</option></select></div><div class="field"><label>Sort Order</label><input type="number" id="pOrd" value="0"></div></div>
+    <div class="field"><label>Tags</label><input type="text" id="pTags" placeholder="comma separated"></div>
+    <div class="field"><label>Description</label><textarea id="pDesc" rows="2"></textarea></div>
+    <div class="field"><label>Video URL (YouTube/Vimeo, optional)</label><input type="text" id="pVid" placeholder="https://youtube.com/watch?v=..."><div class="help">Paste a YouTube or Vimeo link. Leave blank for image-only items.</div></div>
+    <div class="field"><label>Image *</label><div class="upload-area"><input type="file" id="imgFile" accept="image/*"><i class="fas fa-cloud-upload-alt"></i><p>Upload image</p><img class="upload-preview" id="imgPrev"></div><div class="help" style="margin-top:.4rem">Or URL:</div><input type="text" id="pUrl" style="margin-top:.2rem;width:100%;padding:.5rem .7rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.85rem"></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('portfolioModal')">Cancel</button><button class="btn btn-primary" onclick="savePM()">Save</button></div></div></div>
+
+<!-- MESSAGE MODAL -->
+<div class="modal-overlay" id="msgModal"><div class="modal"><div class="modal-header"><h3 id="mmT">Message</h3><button class="modal-close" onclick="cM('msgModal')">&times;</button></div><div style="padding:1.5rem"><div style="font-size:.82rem;color:var(--muted);margin-bottom:1rem"><strong id="mmF"></strong> — <span id="mmD"></span></div><div style="background:#fafafa;padding:1.2rem;border-radius:var(--r);line-height:1.8" id="mmB"></div></div><div class="modal-footer"><a href="#" id="mmR" class="btn btn-primary"><i class="fas fa-reply"></i> Reply</a><button class="btn btn-danger btn-sm" id="mmDel">Delete</button></div></div></div>
+
+<!-- REVIEW MODAL -->
+<div class="modal-overlay" id="revModal"><div class="modal"><div class="modal-header"><h3>Review Detail</h3><button class="modal-close" onclick="cM('revModal')">&times;</button></div><div style="padding:1.5rem"><div class="stars" style="font-size:1.2rem;margin-bottom:1rem" id="rvS"></div><div style="background:#fafafa;padding:1.2rem;border-radius:var(--r);font-style:italic;line-height:1.8;margin-bottom:1rem" id="rvT"></div><div style="font-size:.85rem;color:var(--muted)" id="rvM"></div></div><div class="modal-footer" id="rvA"></div></div></div>
+
+<!-- PAGE EDITOR MODAL -->
+<div class="modal-overlay" id="pageModal"><div class="modal modal-lg"><div class="modal-header"><h3 id="pgTitle">Edit Page</h3><button class="modal-close" onclick="cM('pageModal')">&times;</button></div><div class="modal-body"><input type="hidden" id="pgSlug"><div class="field"><label>Page Title</label><input type="text" id="pgName"></div><div class="field"><label>Content (HTML)</label><textarea id="pgContent" rows="16" style="font-family:'IBM Plex Mono',monospace;font-size:.82rem;line-height:1.6"></textarea><div class="help">HTML supported: &lt;h3&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt; etc.</div></div></div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('pageModal')">Cancel</button><button class="btn btn-primary" onclick="savePage()"><i class="fas fa-save"></i> Save</button></div></div></div>
+
+<!-- SEND MESSAGE TO CLIENT MODAL -->
+<div class="modal-overlay" id="clientMsgModal"><div class="modal"><div class="modal-header"><h3><i class="fas fa-paper-plane" style="color:var(--warm);margin-right:.5rem"></i> Message Client</h3><button class="modal-close" onclick="cM('clientMsgModal')">&times;</button></div><div class="modal-body">
+    <div style="background:#fafafa;padding:.8rem 1rem;border-radius:var(--r);margin-bottom:1rem;font-size:.82rem;color:var(--muted)">
+        <strong>To:</strong> <span id="cmTo"></span><br><strong>Booking:</strong> <span id="cmRef"></span> — <span id="cmSvc"></span>
+    </div>
+    <input type="hidden" id="cmEmail">
+    <div class="field"><label>Subject</label><input type="text" id="cmSubject" placeholder="Update on your project..."></div>
+    <div class="field"><label>Message</label><textarea id="cmBody" rows="6" placeholder="Hi [name], just wanted to update you on your project..."></textarea></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('clientMsgModal')">Cancel</button><button class="btn btn-primary" onclick="sendClientMsg()"><i class="fas fa-paper-plane"></i> Send</button></div></div></div>
+
+<script>
+const API='/api';let auth='';let allSettings={};
+
+// ---- JWT AUTH ----
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const u=document.getElementById('loginUser').value,p=document.getElementById('loginPass').value;
+    try{
+        const r=await fetch(API+'/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+        const d=await r.json();
+        if(r.ok&&d.token){
+            auth='Bearer '+d.token;
+            sessionStorage.setItem('aa',auth);
+            document.getElementById('loginOverlay').classList.add('hidden');
+            loadAll();
+        }else{document.getElementById('loginError').style.display='block';document.getElementById('loginError').textContent=d.error||'Invalid credentials';}
+    }catch(e){alert('Server not running.');}
+});
+(function(){const s=sessionStorage.getItem('aa');if(s){auth=s;document.getElementById('loginOverlay').classList.add('hidden');loadAll();}})();
+
+async function q(m,e,b){const o={method:m,headers:{Authorization:auth,'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);const r=await fetch(API+e,o);if(r.status===401){sessionStorage.removeItem('aa');location.reload();}return r.json();}
+async function upld(f){const d=new FormData();d.append('image',f);const r=await fetch(API+'/admin/upload',{method:'POST',headers:{Authorization:auth},body:d});return r.json();}
+
+// ---- NAV ----
+document.querySelectorAll('.sidebar-nav a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();document.querySelectorAll('.sidebar-nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('sec-'+a.dataset.section).classList.add('active');});});
+function cM(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+function toast(msg,ok=true){const t=document.getElementById('toast');t.className='toast show '+(ok?'ok':'err');t.querySelector('i').className='fas '+(ok?'fa-check-circle':'fa-exclamation-circle');document.getElementById('toastMsg').textContent=msg;setTimeout(()=>t.classList.remove('show'),3000);}
+function showTab(id,el){document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');document.getElementById('tab-'+id).style.display='block';document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));if(el)el.classList.add('active');}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch{return d;}}
+function stars(n){return Array(5).fill(0).map((_,i)=>i<n?'<i class="fas fa-star"></i>':'<i class="fas fa-star dim"></i>').join('');}
+async function loadAll(){await Promise.all([loadStats(),loadPortfolio(),loadReviews(),loadMessages(),loadBookings(),loadSubscribers(),loadSettings(),loadPages()]);}
+
+// Color picker sync
+const colorKeys=['color_primary','color_primary_light','color_accent','color_background','color_text','color_text_muted'];
+colorKeys.forEach(k=>{const cp=document.getElementById('c_'+k),ti=document.getElementById('s_'+k);if(cp&&ti){cp.addEventListener('input',()=>ti.value=cp.value);ti.addEventListener('input',()=>cp.value=ti.value);}});
+
+// ---- COLOR PRESETS ----
+const colorPresets = [
+    { name:'Original',      primary:'#1a2744', light:'#2d4163', accent:'#c4854c', bg:'#faf8f5', text:'#2c3040', muted:'#6b7080', icon:'fa-star' },
+    { name:'Ocean Blue',    primary:'#0f3460', light:'#1a5276', accent:'#e94560', bg:'#f8f9fc', text:'#1c2833', muted:'#5d6d7e', icon:'fa-water' },
+    { name:'Forest',        primary:'#1b4332', light:'#2d6a4f', accent:'#d4a373', bg:'#f9faf6', text:'#212529', muted:'#6c757d', icon:'fa-tree' },
+    { name:'Royal Purple',  primary:'#2d1b69', light:'#4a2d8e', accent:'#f7b731', bg:'#faf8ff', text:'#1a1a2e', muted:'#6b6b8d', icon:'fa-crown' },
+    { name:'Charcoal',      primary:'#2d3436', light:'#4a5568', accent:'#e17055', bg:'#f7f8fa', text:'#1a202c', muted:'#718096', icon:'fa-moon' },
+    { name:'Warm Earth',    primary:'#442727', light:'#6b3a3a', accent:'#d4a76a', bg:'#fdf8f3', text:'#2d2424', muted:'#7d6b6b', icon:'fa-mountain' },
+    { name:'Midnight Teal', primary:'#0a2e36', light:'#17616e', accent:'#ff9a3c', bg:'#f5f9fa', text:'#1a2a2d', muted:'#5e7d82', icon:'fa-compass' },
+    { name:'Slate Rose',    primary:'#37474f', light:'#546e7a', accent:'#e8788a', bg:'#faf8f9', text:'#263238', muted:'#78909c', icon:'fa-heart' },
+    { name:'Espresso',      primary:'#3e2723', light:'#5d4037', accent:'#ff8f00', bg:'#faf6f2', text:'#212121', muted:'#795548', icon:'fa-mug-hot' },
+    { name:'Nordic',        primary:'#1e3a5f', light:'#2e5090', accent:'#4ecdc4', bg:'#f0f4f8', text:'#1a2a3a', muted:'#5a7a8a', icon:'fa-snowflake' },
+    { name:'Sunset',        primary:'#1a1a2e', light:'#16213e', accent:'#e94560', bg:'#fff8f6', text:'#1a1a2e', muted:'#6e6e80', icon:'fa-sun' },
+    { name:'Minimal',       primary:'#111111', light:'#333333', accent:'#0066ff', bg:'#ffffff', text:'#111111', muted:'#888888', icon:'fa-minus' },
+];
+function renderPresets(){
+    const grid=document.getElementById('presetGrid');
+    grid.innerHTML=colorPresets.map((p,i)=>`
+        <button onclick="applyPreset(${i})" style="display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:var(--r);background:var(--bg);cursor:pointer;transition:all .2s;font-size:.78rem;font-weight:500;color:var(--navy);font-family:inherit" onmouseover="this.style.borderColor='${p.primary}'" onmouseout="this.style.borderColor=''">
+            <div style="display:flex;gap:2px">
+                <span style="width:16px;height:16px;border-radius:50%;background:${p.primary}"></span>
+                <span style="width:16px;height:16px;border-radius:50%;background:${p.accent}"></span>
+                <span style="width:10px;height:16px;border-radius:3px;background:${p.bg};border:1px solid #ddd"></span>
+            </div>
+            <span>${p.name}</span>
+        </button>
+    `).join('');
+}
+function applyPreset(i){
+    const p=colorPresets[i];
+    document.getElementById('s_color_primary').value=p.primary;
+    document.getElementById('c_color_primary').value=p.primary;
+    document.getElementById('s_color_primary_light').value=p.light;
+    document.getElementById('c_color_primary_light').value=p.light;
+    document.getElementById('s_color_accent').value=p.accent;
+    document.getElementById('c_color_accent').value=p.accent;
+    document.getElementById('s_color_background').value=p.bg;
+    document.getElementById('c_color_background').value=p.bg;
+    document.getElementById('s_color_text').value=p.text;
+    document.getElementById('c_color_text').value=p.text;
+    document.getElementById('s_color_text_muted').value=p.muted;
+    document.getElementById('c_color_text_muted').value=p.muted;
+    toast('Applied "'+p.name+'" — click Save to keep');
+}
+const defaultAppearance={color_primary:'#1a2744',color_primary_light:'#2d4163',color_accent:'#c4854c',color_background:'#faf8f5',color_text:'#2c3040',color_text_muted:'#6b7080',font_headings:'Playfair Display',font_body:'Source Sans 3',font_accent:'IBM Plex Mono',border_radius:'8',border_radius_large:'12',btn_radius:'8',section_spacing:'normal',shadow_style:'normal'};
+function resetAppearance(){
+    if(!confirm('Reset all appearance settings to the original default? You still need to click Save after.'))return;
+    for(const[k,v]of Object.entries(defaultAppearance)){
+        const el=document.getElementById('s_'+k);if(el)el.value=v;
+        const cp=document.getElementById('c_'+k);if(cp)cp.value=v;
+    }
+    syncSliderLabels();
+    toast('Reset to defaults — click Save to apply');
+}
+function syncSliderLabels(){
+    ['border_radius','border_radius_large','btn_radius'].forEach(k=>{
+        const el=document.getElementById('s_'+k);
+        if(el&&el.nextElementSibling)el.nextElementSibling.textContent=el.value+'px';
+    });
+}
+renderPresets();
+['logoFile','aboutImgFile'].forEach(fid=>{document.getElementById(fid).addEventListener('change',async function(){const f=this.files[0];if(!f)return;const r=await upld(f);if(r&&r.url){const key=fid==='logoFile'?'logo_url':'about_image_url';document.getElementById('s_'+key).value=r.url;const pid=fid==='logoFile'?'logoPreview':'aboutImgPreview';document.getElementById(pid).src=r.url;document.getElementById(pid).style.display='block';if(fid==='logoFile')document.getElementById('clearLogoBtn').style.display='inline-flex';}});});
+document.getElementById('imgFile').addEventListener('change',function(){const f=this.files[0];if(f){const r=new FileReader();r.onload=e=>{document.getElementById('imgPrev').src=e.target.result;document.getElementById('imgPrev').style.display='block';};r.readAsDataURL(f);}});
+
+// ---- STATS ----
+let lastStats = {};
+async function loadStats(){
+    const s=await q('GET','/admin/stats');if(!s)return;
+    lastStats = s;
+    document.getElementById('sB').textContent=s.totalBookings||0;document.getElementById('sR').textContent='$'+(s.totalRevenue||0);document.getElementById('sM').textContent=s.unreadMessages||0;document.getElementById('sS').textContent=s.totalSubscribers||0;document.getElementById('sP').textContent=s.portfolioItems||0;document.getElementById('sPR').textContent=s.pendingReviews||0;
+    // Revenue control
+    document.getElementById('rawRev').textContent=s.rawRevenue||0;
+    document.getElementById('revOffset').value=s.revenueOffset||0;
+    document.getElementById('revTotal').textContent=s.totalRevenue||0;
+    const mb=document.getElementById('msgBadge'),rb=document.getElementById('reviewBadge');
+    if(s.unreadMessages>0){mb.style.display='inline';mb.textContent=s.unreadMessages;}else mb.style.display='none';
+    if(s.pendingReviews>0){rb.style.display='inline';rb.textContent=s.pendingReviews;}else rb.style.display='none';
+    const bk=await q('GET','/admin/bookings');const rc=(bk||[]).slice(0,5);
+    document.getElementById('recentB').innerHTML=rc.length?rc.map(b=>`<tr><td><strong>${esc(b.name)}</strong></td><td>${esc(b.service||'—')}</td><td><strong>$${b.total_amount||0}</strong></td><td><span class="sb sb-${b.status}">${b.status}</span></td><td>${fd(b.created_at)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No bookings yet</td></tr>';
+}
+
+// ---- SETTINGS ----
+const settingsKeys=['company_name','tagline','logo_url','about_image_url','email','phone','address','social_behance','social_dribbble','social_instagram','social_linkedin','social_twitter','social_youtube','color_primary','color_primary_light','color_accent','color_background','color_text','color_text_muted','font_headings','font_body','font_accent','border_radius','border_radius_large','btn_radius','section_spacing','shadow_style','hero_title','hero_subtitle','hero_badge','stat_projects','stat_clients','stat_turnaround','cta_title','cta_subtitle','footer_text','currency_rate','about_title','about_text_1','about_text_2','about_years','about_years_label','invoice_notes','email_subject_booking','email_body_booking','email_subject_confirmed','email_body_confirmed','email_subject_in_progress','email_body_in_progress','email_subject_completed','email_body_completed','email_subject_delivered','email_body_delivered','pdf_header_note','pdf_footer_note'];
+async function loadSettings(){
+    allSettings=await q('GET','/admin/settings')||{};
+    settingsKeys.forEach(k=>{const el=document.getElementById('s_'+k);if(el){if(el.tagName==='SELECT'){const opts=[...el.options];const match=opts.find(o=>o.value===allSettings[k]);if(match)el.value=allSettings[k];} else el.value=allSettings[k]||'';}});
+    colorKeys.forEach(k=>{const cp=document.getElementById('c_'+k),ti=document.getElementById('s_'+k);if(cp&&ti)cp.value=ti.value||'#000000';});
+    syncSliderLabels();
+    if(allSettings.logo_url){document.getElementById('logoPreview').src=allSettings.logo_url;document.getElementById('logoPreview').style.display='block';document.getElementById('clearLogoBtn').style.display='inline-flex';}else{document.getElementById('clearLogoBtn').style.display='none';}
+    if(allSettings.about_image_url){document.getElementById('aboutImgPreview').src=allSettings.about_image_url;document.getElementById('aboutImgPreview').style.display='block';}
+    renderServicesEditor();renderAddonsEditor();renderSkillsEditor();renderToolsEditor();
+}
+async function saveSettings(){
+    const data={};settingsKeys.forEach(k=>{const el=document.getElementById('s_'+k);if(el)data[k]=el.value;});
+    data.services=JSON.stringify(collectServices());data.addons=JSON.stringify(collectAddons());
+    data.skills=JSON.stringify(collectSkills());data.tools=JSON.stringify(collectTools());
+    await q('PUT','/admin/settings',data);allSettings={...allSettings,...data};toast('Settings saved!');loadStats();
+}
+
+// ---- SERVICES (ADD / REMOVE) ----
+function renderServicesEditor(){
+    let svcs=[];try{svcs=JSON.parse(allSettings.services||'[]');}catch{}
+    document.getElementById('servicesEditor').innerHTML=svcs.map((s,i)=>`
+        <div class="svc-card" data-svc="${i}">
+            <button class="btn btn-danger btn-sm svc-del" onclick="rmSvc(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+            <div class="field-row" style="margin-bottom:.5rem"><div class="field" style="margin-bottom:0"><label>Name</label><input type="text" class="svc-name" value="${esc(s.name)}"></div><div class="field" style="margin-bottom:0"><label>Price ($)</label><input type="number" class="svc-price" value="${s.price}"></div></div>
+            <div class="field" style="margin-bottom:.5rem"><label>Description</label><input type="text" class="svc-desc" value="${esc(s.desc)}"></div>
+            <div class="field-row"><div class="field" style="margin-bottom:0"><label>Icon (fa-xxx)</label><input type="text" class="svc-icon" value="${s.icon}"></div><div class="field" style="margin-bottom:0"><label>Features (comma sep)</label><input type="text" class="svc-feat" value="${(s.features||[]).join(', ')}"></div></div>
+        </div>`).join('');
+}
+function collectServices(){
+    const cards=document.querySelectorAll('#servicesEditor .svc-card');
+    let orig=[];try{orig=JSON.parse(allSettings.services||'[]');}catch{}
+    return Array.from(cards).map((c,i)=>({id:orig[i]?.id||'svc_'+Date.now()+'_'+i,icon:c.querySelector('.svc-icon').value,name:c.querySelector('.svc-name').value,desc:c.querySelector('.svc-desc').value,features:c.querySelector('.svc-feat').value.split(',').map(s=>s.trim()).filter(Boolean),price:parseInt(c.querySelector('.svc-price').value)||0}));
+}
+function addSvc(){
+    let svcs=[];try{svcs=JSON.parse(allSettings.services||'[]');}catch{}
+    svcs.push({id:'svc_'+Date.now(),icon:'fa-star',name:'New Service',desc:'Description here',features:['Feature 1'],price:99});
+    allSettings.services=JSON.stringify(svcs);renderServicesEditor();toast('Service added — edit details then Save');
+}
+function rmSvc(i){if(!confirm('Remove this service?'))return;let svcs=[];try{svcs=JSON.parse(allSettings.services||'[]');}catch{}svcs.splice(i,1);allSettings.services=JSON.stringify(svcs);renderServicesEditor();toast('Service removed — click Save to confirm');}
+
+// ---- ADDONS (ADD / REMOVE) ----
+function renderAddonsEditor(){
+    let addons=[];try{addons=JSON.parse(allSettings.addons||'[]');}catch{}
+    document.getElementById('addonsEditor').innerHTML=addons.map((a,i)=>`
+        <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:.5rem;margin-bottom:.5rem;align-items:center" data-addon="${i}">
+            <input type="text" class="adn-name" value="${esc(a.name)}" placeholder="Name" style="padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem">
+            <input type="text" class="adn-desc" value="${esc(a.desc)}" placeholder="Description" style="padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem">
+            <input type="number" class="adn-price" value="${a.price}" placeholder="Price" style="padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem">
+            <button class="btn btn-danger btn-sm" onclick="rmAddon(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+}
+function collectAddons(){return Array.from(document.querySelectorAll('#addonsEditor > div')).map(r=>({name:r.querySelector('.adn-name').value,desc:r.querySelector('.adn-desc').value,price:parseInt(r.querySelector('.adn-price').value)||0}));}
+function addAddon(){let a=[];try{a=JSON.parse(allSettings.addons||'[]');}catch{}a.push({name:'New Add-on',desc:'Description',price:29});allSettings.addons=JSON.stringify(a);renderAddonsEditor();toast('Add-on added — edit then Save');}
+function rmAddon(i){if(!confirm('Remove?'))return;let a=[];try{a=JSON.parse(allSettings.addons||'[]');}catch{}a.splice(i,1);allSettings.addons=JSON.stringify(a);renderAddonsEditor();toast('Add-on removed — Save to confirm');}
+
+// ---- SKILLS EDITOR ----
+function renderSkillsEditor(){
+    let skills=[];try{skills=JSON.parse(allSettings.skills||'[]');}catch{}
+    document.getElementById('skillsEditor').innerHTML=skills.map((s,i)=>`
+        <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:.5rem;margin-bottom:.5rem;align-items:center" data-skill="${i}">
+            <input type="text" class="sk-name" value="${esc(s.name)}" placeholder="Skill name" style="padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem">
+            <div style="display:flex;align-items:center;gap:.4rem"><input type="range" class="sk-pct" min="0" max="100" value="${s.percent||80}" style="flex:1" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="font-size:.78rem;font-family:monospace;width:35px">${s.percent||80}%</span></div>
+            <button class="btn btn-danger btn-sm" onclick="rmSkill(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+}
+function collectSkills(){return Array.from(document.querySelectorAll('#skillsEditor > div')).map(r=>({name:r.querySelector('.sk-name').value,percent:parseInt(r.querySelector('.sk-pct').value)||0}));}
+function addSkill(){let s=[];try{s=JSON.parse(allSettings.skills||'[]');}catch{}s.push({name:'New Skill',percent:80});allSettings.skills=JSON.stringify(s);renderSkillsEditor();toast('Skill added — edit then Save');}
+function rmSkill(i){if(!confirm('Remove?'))return;let s=[];try{s=JSON.parse(allSettings.skills||'[]');}catch{}s.splice(i,1);allSettings.skills=JSON.stringify(s);renderSkillsEditor();toast('Skill removed — Save to confirm');}
+
+// ---- TOOLS EDITOR ----
+function renderToolsEditor(){
+    let tools=[];try{tools=JSON.parse(allSettings.tools||'[]');}catch{}
+    document.getElementById('toolsEditor').innerHTML=tools.map((t,i)=>`
+        <div style="display:grid;grid-template-columns:1fr 2fr auto;gap:.5rem;margin-bottom:.5rem;align-items:center" data-tool="${i}">
+            <input type="text" class="tl-icon" value="${esc(t.icon)}" placeholder="fab fa-adobe" style="padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem;font-family:monospace">
+            <input type="text" class="tl-name" value="${esc(t.name)}" placeholder="Tool name" style="padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.84rem">
+            <button class="btn btn-danger btn-sm" onclick="rmTool(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+}
+function collectTools(){return Array.from(document.querySelectorAll('#toolsEditor > div')).map(r=>({icon:r.querySelector('.tl-icon').value,name:r.querySelector('.tl-name').value}));}
+function addTool(){let t=[];try{t=JSON.parse(allSettings.tools||'[]');}catch{}t.push({icon:'fas fa-star',name:'New Tool'});allSettings.tools=JSON.stringify(t);renderToolsEditor();toast('Tool added — edit then Save');}
+function rmTool(i){if(!confirm('Remove?'))return;let t=[];try{t=JSON.parse(allSettings.tools||'[]');}catch{}t.splice(i,1);allSettings.tools=JSON.stringify(t);renderToolsEditor();toast('Tool removed — Save to confirm');}
+
+// ---- PORTFOLIO ----
+let pItems=[];
+async function loadPortfolio(){pItems=await q('GET','/admin/portfolio')||[];const t=document.getElementById('pTbl');if(!pItems.length){t.innerHTML='<tr><td colspan="6"><div class="empty"><i class="fas fa-images"></i><p>No items.</p></div></td></tr>';return;}t.innerHTML=pItems.map(i=>`<tr><td><img class="pt" src="${esc(i.image_url)}" onerror="this.style.background='#eee'"></td><td><strong>${esc(i.title)}</strong></td><td>${esc(i.category)}</td><td>${i.video_url?'<i class="fas fa-video" style="color:var(--warm)"></i>':'—'}</td><td><span class="sb ${i.is_visible?'sb-visible':'sb-hidden'}">${i.is_visible?'Visible':'Hidden'}</span></td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="editP(${i.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="togP(${i.id})"><i class="fas fa-eye"></i></button><button class="btn btn-danger btn-sm" onclick="delP(${i.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function openPM(item){document.getElementById('pmTitle').textContent=item?'Edit Item':'Add Item';document.getElementById('editId').value=item?item.id:'';document.getElementById('pTitle').value=item?item.title:'';document.getElementById('pTags').value=item?(item.tags||[]).join(', '):'';document.getElementById('pDesc').value=item?item.description||'':'';document.getElementById('pOrd').value=item?item.sort_order:0;document.getElementById('pVid').value=item?item.video_url||'':'';document.getElementById('pUrl').value=item?item.image_url:'';
+    // Dynamic categories from services
+    const catSel=document.getElementById('pCat');let svcs=[];try{svcs=JSON.parse(allSettings.services||'[]');}catch{}
+    if(svcs.length){catSel.innerHTML=svcs.map(s=>`<option value="${s.id||s.name.toLowerCase().replace(/\s+/g,'-')}">${esc(s.name)}</option>`).join('');}
+    if(item)catSel.value=item.category;
+    const p=document.getElementById('imgPrev');if(item&&item.image_url){p.src=item.image_url;p.style.display='block';}else p.style.display='none';document.getElementById('imgFile').value='';document.getElementById('portfolioModal').classList.add('show');}
+function editP(id){const i=pItems.find(x=>x.id===id);if(i)openPM(i);}
+async function savePM(){const eid=document.getElementById('editId').value,t=document.getElementById('pTitle').value.trim(),c=document.getElementById('pCat').value,tg=document.getElementById('pTags').value.split(',').map(s=>s.trim()).filter(Boolean),d=document.getElementById('pDesc').value.trim(),o=parseInt(document.getElementById('pOrd').value)||0,vid=document.getElementById('pVid').value.trim(),f=document.getElementById('imgFile').files[0];let u=document.getElementById('pUrl').value.trim();if(!t||!c)return alert('Title and category required.');if(f){const r=await upld(f);if(r&&r.url)u=r.url;else return alert('Upload failed.');}if(!u)return alert('Image required.');const data={title:t,category:c,tags:tg,image_url:u,video_url:vid,description:d,is_visible:1,sort_order:o};if(eid)await q('PUT',`/admin/portfolio/${eid}`,data);else await q('POST','/admin/portfolio',data);cM('portfolioModal');loadPortfolio();loadStats();toast(eid?'Updated!':'Added!');}
+async function delP(id){if(!confirm('Delete?'))return;await q('DELETE',`/admin/portfolio/${id}`);loadPortfolio();loadStats();}
+async function togP(id){await q('PATCH',`/admin/portfolio/${id}/toggle`);loadPortfolio();}
+
+// ---- REVIEWS ----
+let allRevs=[],revF='all';
+async function loadReviews(){allRevs=await q('GET','/admin/reviews')||[];renderRevs();}
+function renderRevs(){const fl=revF==='all'?allRevs:allRevs.filter(r=>r.status===revF);const t=document.getElementById('rTbl');if(!fl.length){t.innerHTML=`<tr><td colspan="7"><div class="empty"><i class="fas fa-star"></i><p>No ${revF==='all'?'':revF+' '}reviews.</p></div></td></tr>`;return;}t.innerHTML=fl.map(r=>`<tr><td><span class="sb sb-${r.status}">${r.status}</span></td><td><div class="stars">${stars(r.rating)}</div></td><td><strong>${esc(r.name)}</strong></td><td><div class="rp">${esc(r.text)}</div></td><td>${esc(r.service_used||'—')}</td><td>${fd(r.created_at)}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="viewRev(${r.id})"><i class="fas fa-eye"></i></button>${r.status!=='approved'?`<button class="btn btn-success btn-sm" onclick="appRev(${r.id})"><i class="fas fa-check"></i></button>`:''}${r.status!=='rejected'?`<button class="btn btn-danger btn-sm" onclick="rejRev(${r.id})"><i class="fas fa-times"></i></button>`:''}<button class="btn btn-danger btn-sm" onclick="delRev(${r.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function fRev(f,el){revF=f;document.querySelectorAll('.fR').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');renderRevs();}
+function viewRev(id){const r=allRevs.find(x=>x.id===id);if(!r)return;document.getElementById('rvS').innerHTML=stars(r.rating);document.getElementById('rvT').textContent='"'+r.text+'"';document.getElementById('rvM').innerHTML=`<p><strong>Client:</strong> ${esc(r.name)} (${esc(r.email)})</p><p><strong>Company:</strong> ${esc([r.role,r.company].filter(Boolean).join(', ')||'—')}</p><p><strong>Service:</strong> ${esc(r.service_used||'—')}</p>`;let a=`<button class="btn btn-outline" onclick="cM('revModal')">Close</button>`;if(r.status!=='approved')a+=` <button class="btn btn-success" onclick="appRev(${r.id});cM('revModal')">Approve</button>`;if(r.status!=='rejected')a+=` <button class="btn btn-danger" onclick="rejRev(${r.id});cM('revModal')">Reject</button>`;document.getElementById('rvA').innerHTML=a;document.getElementById('revModal').classList.add('show');}
+async function appRev(id){await q('PATCH',`/admin/reviews/${id}/approve`);loadReviews();loadStats();toast('Approved!');}
+async function rejRev(id){await q('PATCH',`/admin/reviews/${id}/reject`);loadReviews();loadStats();toast('Rejected');}
+async function delRev(id){if(!confirm('Delete?'))return;await q('DELETE',`/admin/reviews/${id}`);loadReviews();loadStats();}
+
+// ---- MESSAGES ----
+let allMsgs=[];
+async function loadMessages(){allMsgs=await q('GET','/admin/contacts')||[];const t=document.getElementById('mTbl');if(!allMsgs.length){t.innerHTML='<tr><td colspan="6"><div class="empty"><i class="fas fa-envelope-open"></i><p>No messages.</p></div></td></tr>';return;}t.innerHTML=allMsgs.map(m=>`<tr style="${!m.is_read?'font-weight:600':''}"><td><span class="sb ${m.is_read?'':'sb-unread'}">${m.is_read?'Read':'New'}</span></td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.subject||'—')}</td><td>${fd(m.created_at)}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="viewMsg(${m.id})"><i class="fas fa-eye"></i></button><button class="btn btn-danger btn-sm" onclick="delMsg(${m.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+async function viewMsg(id){const m=allMsgs.find(x=>x.id===id);if(!m)return;document.getElementById('mmT').textContent=m.subject||'No Subject';document.getElementById('mmF').textContent=m.name+' ('+m.email+')';document.getElementById('mmD').textContent=new Date(m.created_at).toLocaleString();document.getElementById('mmB').textContent=m.message;document.getElementById('mmR').href='mailto:'+m.email+'?subject=Re: '+(m.subject||'');document.getElementById('mmDel').onclick=()=>{delMsg(id);cM('msgModal');};document.getElementById('msgModal').classList.add('show');if(!m.is_read){await q('PATCH',`/admin/contacts/${id}/read`);m.is_read=1;loadMessages();loadStats();}}
+async function delMsg(id){if(!confirm('Delete?'))return;await q('DELETE',`/admin/contacts/${id}`);loadMessages();loadStats();}
+
+// ---- BOOKINGS (with status update) ----
+const statusOpts=['pending','confirmed','in-progress','delivered','completed'];
+async function loadBookings(){const bk=await q('GET','/admin/bookings')||[];const t=document.getElementById('bTbl');if(!bk.length){t.innerHTML='<tr><td colspan="7"><div class="empty"><i class="fas fa-calendar"></i><p>No bookings.</p></div></td></tr>';return;}t.innerHTML=bk.map(b=>`<tr><td><code style="font-size:.73rem">${esc(b.reference||'—')}</code></td><td><strong>${esc(b.name)}</strong><br><span style="font-size:.73rem;color:var(--muted)">${esc(b.email)}</span></td><td>${esc(b.service||'—')}</td><td><strong>$${b.total_amount||0}</strong></td><td><select onchange="updBooking('${esc(b.reference)}',this.value)" style="padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;font-size:.75rem">${statusOpts.map(s=>`<option value="${s}"${b.status===s?' selected':''}>${s}</option>`).join('')}</select></td><td>${fd(b.created_at)}</td><td><div class="ac">${b.invoice_path?`<a href="${b.invoice_path}" target="_blank" class="btn btn-outline btn-sm" title="Download Invoice PDF"><i class="fas fa-file-pdf"></i></a> `:''}<button class="btn btn-outline btn-sm" onclick="openClientMsg('${esc(b.email)}','${esc(b.name)}','${esc(b.reference)}','${esc(b.service||'')}')" title="Message client"><i class="fas fa-envelope"></i></button> <button class="btn btn-outline btn-sm" style="color:var(--error)" onclick="delBooking(${b.id})" title="Delete booking"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+async function updBooking(ref,status){const r=await q('PATCH',`/admin/bookings/${ref}/status`,{status});if(r&&r.emailSent)toast('Status updated — email sent to client');else toast('Status updated');loadBookings();loadStats();}
+
+// ---- SUBSCRIBERS ----
+async function loadSubscribers(){const ss=await q('GET','/admin/subscribers')||[];const t=document.getElementById('sTbl');if(!ss.length){t.innerHTML='<tr><td colspan="3"><div class="empty"><i class="fas fa-users"></i><p>No subscribers.</p></div></td></tr>';return;}t.innerHTML=ss.map(s=>`<tr><td>${esc(s.email)}</td><td>${fd(s.subscribed_at)}</td><td><button class="btn btn-danger btn-sm" onclick="delSub(${s.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('');}
+async function delSub(id){if(!confirm('Remove?'))return;await q('DELETE',`/admin/subscribers/${id}`);loadSubscribers();loadStats();}
+
+// ---- PAGES ----
+async function loadPages(){const pp=await q('GET','/admin/pages')||[];document.getElementById('pgTbl').innerHTML=pp.length?pp.map(p=>`<tr><td><strong>${esc(p.title)}</strong><br><span style="font-size:.73rem;color:var(--muted)">/${p.slug}</span></td><td>${fd(p.updated_at)}</td><td><button class="btn btn-outline btn-sm" onclick="editPage('${p.slug}')"><i class="fas fa-edit"></i> Edit</button> <a href="/${p.slug}" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i></a></td></tr>`).join(''):'<tr><td colspan="3" class="empty">No pages</td></tr>';}
+async function editPage(slug){const p=await q('GET',`/admin/pages/${slug}`);if(!p)return;document.getElementById('pgSlug').value=slug;document.getElementById('pgName').value=p.title;document.getElementById('pgContent').value=p.content;document.getElementById('pgTitle').textContent='Edit: '+p.title;document.getElementById('pageModal').classList.add('show');}
+async function savePage(){const slug=document.getElementById('pgSlug').value,title=document.getElementById('pgName').value.trim(),content=document.getElementById('pgContent').value;if(!title)return alert('Title required.');await q('PUT',`/admin/pages/${slug}`,{title,content});cM('pageModal');loadPages();toast('Page saved!');}
+
+// ---- CLEAR LOGO ----
+function clearLogo(){
+    document.getElementById('s_logo_url').value='';
+    document.getElementById('logoPreview').style.display='none';
+    document.getElementById('logoPreview').src='';
+    document.getElementById('logoFile').value='';
+    document.getElementById('clearLogoBtn').style.display='none';
+    toast('Logo removed — click Save to confirm');
+}
+
+// ---- MESSAGE CLIENT (from Bookings) ----
+function openClientMsg(email,name,ref,service){
+    document.getElementById('cmEmail').value=email;
+    document.getElementById('cmTo').textContent=name+' ('+email+')';
+    document.getElementById('cmRef').textContent=ref;
+    document.getElementById('cmSvc').textContent=service;
+    document.getElementById('cmSubject').value='Update on your project — #'+ref;
+    document.getElementById('cmBody').value='Hi '+name+',\n\n\n\nBest regards,\n'+(allSettings.company_name||'CreativeStudio');
+    document.getElementById('clientMsgModal').classList.add('show');
+}
+async function sendClientMsg(){
+    const email=document.getElementById('cmEmail').value;
+    const subject=document.getElementById('cmSubject').value.trim();
+    const body=document.getElementById('cmBody').value.trim();
+    if(!subject||!body){alert('Subject and message are required.');return;}
+    const r=await q('POST','/admin/send-message',{to:email,subject,message:body});
+    if(r&&r.ok){toast('Message sent to '+email);cM('clientMsgModal');}else{toast('Failed to send','err');}
+}
+
+// ---- BOOKING DELETE ----
+async function delBooking(id){
+    if(!confirm('Delete this booking? This cannot be undone.'))return;
+    await q('DELETE','/admin/bookings/'+id);
+    loadBookings();loadStats();toast('Booking deleted');
+}
+async function clearAllBookings(){
+    if(!confirm('Delete ALL bookings? This will reset your booking history and revenue to 0. This cannot be undone.'))return;
+    if(!confirm('Are you absolutely sure? Type OK to confirm.'))return;
+    await q('DELETE','/admin/bookings');
+    loadBookings();loadStats();toast('All bookings cleared');
+}
+
+// ---- REVENUE CONTROL ----
+function showRevenueCtrl(){
+    document.getElementById('revenueCtrl').style.display='block';
+    document.getElementById('revOffset').focus();
+}
+document.getElementById('revOffset').addEventListener('input',function(){
+    const raw=parseInt(document.getElementById('rawRev').textContent)||0;
+    const offset=parseInt(this.value)||0;
+    document.getElementById('revTotal').textContent=raw+offset;
+});
+async function saveRevenue(){
+    const offset=parseInt(document.getElementById('revOffset').value)||0;
+    await q('PUT','/admin/revenue-offset',{offset});
+    loadStats();toast('Revenue updated');
+}
+async function resetRevenue(){
+    if(!confirm('Reset revenue offset to $0?'))return;
+    document.getElementById('revOffset').value=0;
+    await q('PUT','/admin/revenue-offset',{offset:0});
+    loadStats();toast('Revenue reset');
+}
+
+// ---- BACKUP ----
+async function doBackup(){toast('Backing up...');try{const r=await q('POST','/admin/backup');if(r.ok)toast('Backup created!');else toast(r.error||'Failed','err');}catch(e){toast('Backup failed',false);}}
+</script>
+</body>
+</html>
