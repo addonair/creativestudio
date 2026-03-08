@@ -270,13 +270,15 @@ app.get('/api/health', (r, s) => s.json({ status: 'ok', time: new Date().toISOSt
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+        const cleanUser = (username || '').trim().toLowerCase();
+        const cleanPass = (password || '').trim();
+        if (!cleanUser || !cleanPass) return res.status(400).json({ error: 'Username and password required' });
 
-        const user = db.getAdminUser(username);
-        if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+        const user = db.getAdminUser(cleanUser);
+        if (!user) { console.log(`Login failed: user "${cleanUser}" not found`); return res.status(401).json({ error: 'Invalid credentials' }); }
 
-        const match = await bcrypt.compare(password, user.password_hash);
-        if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+        const match = await bcrypt.compare(cleanPass, user.password_hash);
+        if (!match) { console.log(`Login failed: wrong password for "${cleanUser}"`); return res.status(401).json({ error: 'Invalid credentials' }); }
 
         const token = jwt.sign({ username, id: user.id }, JWT_SECRET, { expiresIn: '24h' });
         res.json({ ok: true, token });
