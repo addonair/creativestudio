@@ -36,89 +36,125 @@
         .admin-sidebar-backdrop{display:none}
 
         @media(max-width:768px){
-            /* Mobile header bar */
+            /* ======= MOBILE HEADER ======= */
             .admin-mobile-header{display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy-deep);color:#fff;padding:0 1rem;z-index:101}
             .admin-hamburger{background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;padding:.4rem}
             .admin-mobile-title{font-size:1rem;font-weight:700}
             .admin-mobile-site{color:rgba(255,255,255,.5);font-size:.9rem;padding:.4rem}
 
-            /* Sidebar: slide-out drawer */
+            /* ======= SIDEBAR: slide-out drawer ======= */
             .sidebar{transform:translateX(-100%);transition:transform .3s ease;width:260px;z-index:200}
             .sidebar.open{transform:translateX(0)}
-
-            /* Backdrop */
+            .sidebar-bottom{display:none}
             .admin-sidebar-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;opacity:0;transition:opacity .3s ease;pointer-events:none}
             .admin-sidebar-backdrop.active{opacity:1;pointer-events:auto}
 
-            /* Main content */
-            .main{margin-left:0;padding:.8rem;padding-top:60px;min-height:100vh}
+            /* ======= MAIN CONTENT ======= */
+            .main{margin-left:0!important;padding:.7rem!important;padding-top:60px!important;min-height:100vh}
 
-            /* Page header */
-            .page-header{flex-direction:column;align-items:flex-start;gap:.6rem;margin-bottom:1.2rem}
-            .page-header h1{font-size:1.2rem}
-            .page-header .btn{font-size:.76rem;padding:.4rem .8rem}
+            /* ======= PAGE HEADER ======= */
+            .page-header{flex-direction:column!important;align-items:stretch!important;gap:.6rem!important;margin-bottom:1rem}
+            .page-header h1{font-size:1.15rem}
+            /* Inline div wrappers with display:flex — stack on mobile */
+            .page-header>div[style]{display:flex!important;flex-wrap:wrap!important;gap:.4rem!important}
+            .page-header .btn{font-size:.74rem!important;padding:.4rem .7rem!important;flex:1;min-width:0;justify-content:center}
 
-            /* Stats grid */
-            .stats-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}
-            .stat-card{padding:.8rem}
-            .stat-card .vl{font-size:1.3rem}
-            .stat-card .lb{font-size:.65rem}
+            /* ======= STATS ======= */
+            .stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:.5rem!important}
+            .stat-card{padding:.7rem!important}
+            .stat-card .vl{font-size:1.2rem!important}
+            .stat-card .lb{font-size:.62rem}
 
-            /* Cards */
-            .card-header{padding:.6rem .8rem;font-size:.82rem;flex-wrap:wrap;gap:.5rem}
-            .card-body{padding:.8rem}
+            /* ======= REVENUE CONTROL ======= */
+            #revenueCtrl .card-body{flex-direction:column!important;align-items:stretch!important;gap:.6rem!important}
+            #revenueCtrl .card-body>div[style]{flex-wrap:wrap!important}
+            #revenueCtrl input[type=number]{width:100%!important}
 
-            /* Tables — horizontal scroll */
-            .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
-            table{min-width:600px}
-            td,th{padding:.4rem .6rem;font-size:.75rem}
+            /* ======= CARDS ======= */
+            .card{margin-bottom:1rem}
+            .card-header{padding:.55rem .7rem;font-size:.8rem;flex-wrap:wrap!important;gap:.4rem!important}
+            .card-header>div{display:flex!important;flex-wrap:wrap!important;gap:.3rem!important}
+            .card-body{padding:.6rem!important;overflow-x:auto;-webkit-overflow-scrolling:touch}
 
-            /* Form fields */
-            .field-row,.field-row-3{grid-template-columns:1fr}
-            .field input,.field select,.field textarea{font-size:.88rem;padding:.5rem .7rem}
-            .field label{font-size:.78rem}
+            /* ======= TABLES ======= */
+            table{min-width:580px}
+            td,th{padding:.35rem .5rem;font-size:.73rem}
+            .pt{width:40px;height:30px}
+            .rp{max-width:100px}
+            .ac{gap:.2rem!important}
+            .ac .btn{padding:.2rem .4rem!important;font-size:.68rem!important}
 
-            /* Modals */
-            .modal-overlay{padding:.5rem}
-            .modal{border-radius:8px;max-height:95vh}
-            .modal-lg{max-width:100%}
-            .modal-header{padding:.8rem 1rem}
-            .modal-header h3{font-size:.95rem}
-            .modal-body{padding:1rem}
-            .modal-footer{padding:.6rem 1rem;flex-wrap:wrap}
+            /* ======= FORMS ======= */
+            .field-row,.field-row-3{grid-template-columns:1fr!important}
+            .field input,.field select,.field textarea{font-size:.86rem;padding:.5rem .7rem}
+            .field label{font-size:.76rem}
+            .color-field{flex-wrap:wrap!important}
+            .color-field input[type=color]{width:34px!important;height:30px!important}
 
-            /* Login box */
-            .login-box{padding:2rem 1.5rem;max-width:calc(100vw - 2rem);margin:0 1rem}
-            .login-box h2{font-size:1.3rem}
+            /* Upload areas — stack logo/image upload on mobile */
+            .field>div[style*="display:flex"][style*="gap:1rem"]{flex-direction:column!important}
+            .upload-area{padding:.8rem}
 
-            /* Buttons */
-            .btn{font-size:.78rem;padding:.45rem .9rem}
-            .btn-sm{padding:.25rem .5rem;font-size:.7rem}
+            /* ======= SEARCH & FILTER BARS ======= */
+            div[style*="max-width:280px"],div[style*="max-width:320px"]{max-width:100%!important}
+            #msgSearch,#bookingSearch{width:100%!important;max-width:100%!important}
 
-            /* Action buttons in tables */
-            .ac{gap:.3rem}
+            /* ======= ANALYTICS 2-COL GRID ======= */
+            .analytics-grid{grid-template-columns:1fr!important;gap:.7rem!important}
 
-            /* Tabs */
-            .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+            /* ======= TABS ======= */
+            .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:0}
             .tabs::-webkit-scrollbar{display:none}
-            .tab{padding:.5rem .8rem;font-size:.78rem;white-space:nowrap;flex-shrink:0}
+            .tab{padding:.45rem .7rem;font-size:.76rem;white-space:nowrap;flex-shrink:0}
 
-            /* Toast */
-            .toast{right:.8rem;left:.8rem;max-width:none;font-size:.82rem}
+            /* ======= MODALS ======= */
+            .modal-overlay{padding:.4rem!important}
+            .modal,.modal-lg{max-width:100%!important;border-radius:8px;max-height:95vh}
+            .modal-header{padding:.7rem .9rem}
+            .modal-header h3{font-size:.92rem}
+            .modal-body{padding:.8rem!important}
+            .modal-body .field-row,.modal-body .field-row-3{grid-template-columns:1fr!important}
+            .modal-footer{padding:.6rem .9rem;flex-wrap:wrap!important;gap:.4rem!important}
+            .modal-footer .btn{flex:1;justify-content:center;min-width:0}
 
-            /* Upload area */
-            .upload-area{padding:1rem}
+            /* ======= LOGIN ======= */
+            .login-box{padding:1.8rem 1.3rem!important;max-width:calc(100vw - 2rem)!important;margin:0 1rem}
+            .login-box h2{font-size:1.2rem}
+            .login-box>p{font-size:.82rem;margin-bottom:1.5rem}
 
-            /* Misc */
-            .rp{max-width:120px}
-            .pt{width:44px;height:32px}
-            .svc-card{padding:.8rem}
-            .color-field{flex-wrap:wrap}
+            /* ======= BUTTONS ======= */
+            .btn{font-size:.76rem;padding:.42rem .8rem}
+            .btn-sm{padding:.22rem .45rem;font-size:.68rem}
+
+            /* ======= NEWSLETTER PANEL ======= */
+            #newsletterPanel .card-body>div[style*="display:flex"]{flex-direction:column!important}
+            #newsletterPanel .btn{width:100%!important;justify-content:center}
+
+            /* ======= SERVICE EDITOR ======= */
+            .svc-card{padding:.7rem}
+            .svc-card .field-row,.svc-card .field-row-3{grid-template-columns:1fr!important}
+
+            /* ======= APPEARANCE PRESET GRID ======= */
+            #presetGrid{grid-template-columns:repeat(2,1fr)!important;gap:.4rem!important}
+
+            /* ======= TOAST ======= */
+            .toast{right:.6rem!important;left:.6rem!important;max-width:none!important;font-size:.8rem}
+
+            /* ======= INLINE STYLE OVERRIDES ======= */
+            /* Any flex row inside settings/cards that uses inline style */
+            .card-body>div[style*="display:flex"][style*="justify-content:space-between"]{flex-wrap:wrap!important;gap:.5rem!important}
+            .card-body>div[style*="display:flex"][style*="align-items:center"]{flex-wrap:wrap!important}
+            /* Status email boxes */
+            .card-body>div[style*="border:1px solid"][style*="padding:1rem"]{padding:.7rem!important}
         }
 
         @media(max-width:400px){
-            .stats-grid{grid-template-columns:1fr}
-            .admin-mobile-title{font-size:.88rem}
+            .stats-grid{grid-template-columns:1fr!important}
+            .admin-mobile-title{font-size:.85rem}
+            .page-header h1{font-size:1rem}
+            .stat-card .vl{font-size:1.1rem!important}
+            td,th{font-size:.7rem}
+            .tab{font-size:.72rem;padding:.4rem .6rem}
         }
     </style>
 </head>
@@ -393,7 +429,7 @@
         <div class="stat-card"><div class="lb">Bookings (30d)</div><div class="vl" id="aBookings">—</div></div>
         <div class="stat-card"><div class="lb">Revenue (30d)</div><div class="vl" id="aRevenue">—</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+    <div class="analytics-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
         <div class="card"><div class="card-header">Top Pages</div><table><thead><tr><th>Page</th><th>Views</th></tr></thead><tbody id="topPagesTbl"></tbody></table></div>
         <div class="card"><div class="card-header">Popular Services</div><table><thead><tr><th>Service</th><th>Bookings</th><th>Revenue</th></tr></thead><tbody id="popSvcTbl"></tbody></table></div>
     </div>
