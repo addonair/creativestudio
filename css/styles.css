@@ -105,7 +105,7 @@ img { max-width: 100%; display: block; }
 
 .nav-links a:hover { color: var(--navy); }
 
-.nav-cta { display: flex; align-items: center; gap: 1rem; }
+.nav-cta { display: flex; align-items: center; gap: 1rem; flex-shrink: 0; }
 
 /* Mobile nav extras — hidden on desktop, shown in slide-out menu */
 .mobile-nav-extras { display: none; }
@@ -1224,8 +1224,28 @@ footer .social-link:hover { background: var(--warm); border-color: var(--warm); 
 
 /* ==================== RESPONSIVE ==================== */
 
+/* --- Small desktop (1280px and below) — reduce nav clutter --- */
+@media (max-width: 1280px) {
+    .nav-links { gap: 1.6rem; }
+    .nav-links a { font-size: 0.85rem; }
+    .nav-cta { gap: 0.7rem; }
+    .nav-cta .currency-toggle { font-size: 0.68rem; padding: 0.25rem 0.6rem; }
+    .nav-cta .lang-switcher { font-size: 0.68rem; padding: 0.2rem 0.35rem; }
+    .nav-cta .btn-outline { font-size: 0.72rem; padding: 0.35rem 0.7rem; }
+    .nav-cta .btn-primary { font-size: 0.78rem; padding: 0.55rem 1rem; }
+    .nav-cta .dark-mode-toggle { width: 30px; height: 30px; font-size: 0.78rem; }
+}
+
 /* --- Tablet landscape --- */
 @media (max-width: 1024px) {
+    /* Nav: hide least essential items to prevent overflow */
+    .nav-links { gap: 1.2rem; }
+    .nav-cta { gap: 0.5rem; }
+    .nav-cta .lang-switcher { display: none; }
+    .nav-cta .btn-outline { display: none; }
+    .nav-cta .currency-toggle { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
+    .nav-cta .btn-primary { font-size: 0.75rem; padding: 0.45rem 0.9rem; }
+
     .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
     .testimonials-grid { grid-template-columns: 1fr; }
     .about-content, .contact-content { grid-template-columns: 1fr; gap: 3rem; }

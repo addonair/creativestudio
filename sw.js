@@ -1,5 +1,5 @@
 // CreativeStudio Service Worker — PWA + Offline Support
-const CACHE_NAME = 'creativestudio-v3';
+const CACHE_NAME = 'creativestudio-v4';
 const STATIC_ASSETS = [
     '/',
     '/css/styles.css',
