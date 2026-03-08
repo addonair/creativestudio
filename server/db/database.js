@@ -348,7 +348,7 @@ module.exports = {
     savePage(slug,title,content) { db.prepare('INSERT INTO pages (slug,title,content,updated_at) VALUES (?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(slug) DO UPDATE SET title=excluded.title,content=excluded.content,updated_at=CURRENT_TIMESTAMP').run(slug,title,content); },
 
     // --- Admin Users (bcrypt) ---
-    getAdminUser(username) { return db.prepare('SELECT * FROM admin_users WHERE username=?').get(username); },
+    getAdminUser(username) { return db.prepare('SELECT * FROM admin_users WHERE LOWER(username)=LOWER(?)').get(username); },
     createAdminUser(username, hash) { return db.prepare('INSERT INTO admin_users (username,password_hash) VALUES (?,?)').run(username, hash).lastInsertRowid; },
     adminUserCount() { return db.prepare('SELECT COUNT(*) as c FROM admin_users').get().c; },
 
