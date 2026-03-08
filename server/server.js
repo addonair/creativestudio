@@ -16,9 +16,11 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('he
 const SALT_ROUNDS = 10;
 
 // ---- Directories ----
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const invoicesDir = path.join(__dirname, '..', 'invoices');
-const backupsDir = path.join(__dirname, '..', 'backups');
+// Use DATA_PATH env variable for persistent storage (e.g. Render Disk at /data)
+const dataRoot = process.env.DATA_PATH || path.join(__dirname, '..');
+const uploadsDir = path.join(dataRoot, 'uploads');
+const invoicesDir = path.join(dataRoot, 'invoices');
+const backupsDir = path.join(dataRoot, 'backups');
 [uploadsDir, invoicesDir, backupsDir].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 
 // ---- Auto-create admin user from .env on first run ----

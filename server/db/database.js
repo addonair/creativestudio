@@ -6,8 +6,14 @@
 
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, 'creativestudio.db');
+// Use DB_PATH env variable for persistent storage (e.g. Render Disk)
+// Falls back to local directory for development
+const dbDir = process.env.DB_PATH || __dirname;
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+const dbPath = path.join(dbDir, 'creativestudio.db');
+console.log(`📂 Database path: ${dbPath}`);
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
