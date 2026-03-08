@@ -407,8 +407,22 @@ function initHeader() {
 function initMobileMenu() {
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.getElementById('navMenu');
-    if (hamburger) hamburger.addEventListener('click', () => navMenu.classList.toggle('active'));
-    document.querySelectorAll('.nav-links a').forEach(link => link.addEventListener('click', () => navMenu.classList.remove('active')));
+    const backdrop = document.getElementById('navBackdrop');
+    function closeMenu() {
+        navMenu.classList.remove('active');
+        if (backdrop) backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    function openMenu() {
+        navMenu.classList.add('active');
+        if (backdrop) backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    if (hamburger) hamburger.addEventListener('click', () => {
+        navMenu.classList.contains('active') ? closeMenu() : openMenu();
+    });
+    if (backdrop) backdrop.addEventListener('click', closeMenu);
+    document.querySelectorAll('.nav-links a').forEach(link => link.addEventListener('click', closeMenu));
 }
 
 
@@ -1243,6 +1257,39 @@ function initLanguage() {
     switcher.addEventListener('change', (e) => setLanguage(e.target.value));
 }
 initLanguage();
+
+// Sync mobile nav duplicates with desktop controls
+(function syncMobileNav() {
+    // Currency toggle (mobile)
+    const mobCur = document.getElementById('currencyToggleMob');
+    if (mobCur) {
+        mobCur.addEventListener('click', () => {
+            const btn = document.getElementById('currencyToggle');
+            if (btn) btn.click();
+            // Mirror active state
+            const spans = mobCur.querySelectorAll('span');
+            spans.forEach(s => s.classList.remove('cur-active'));
+            if (currentCurrency === 'USD') spans[0].classList.add('cur-active');
+            else spans[1].classList.add('cur-active');
+        });
+    }
+    // Language switcher (mobile)
+    const mobLang = document.getElementById('langSwitcherMob');
+    if (mobLang) {
+        const saved = localStorage.getItem('lang') || 'en';
+        mobLang.value = saved;
+        mobLang.addEventListener('change', (e) => {
+            setLanguage(e.target.value);
+            const desk = document.getElementById('langSwitcher');
+            if (desk) desk.value = e.target.value;
+        });
+    }
+    // Also sync desktop lang -> mobile
+    const deskLang = document.getElementById('langSwitcher');
+    if (deskLang && mobLang) {
+        deskLang.addEventListener('change', () => { mobLang.value = deskLang.value; });
+    }
+})();
 
 // Call WhatsApp init after settings load
 const origLoadSettings = loadSiteSettings;
