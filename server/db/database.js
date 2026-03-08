@@ -60,6 +60,98 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS admin_users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'admin',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS blog_posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL,
+        excerpt TEXT DEFAULT '', content TEXT NOT NULL,
+        cover_image TEXT DEFAULT '', category TEXT DEFAULT 'general',
+        tags TEXT DEFAULT '[]', author TEXT DEFAULT 'Admin',
+        status TEXT DEFAULT 'draft',
+        views INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS faqs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question TEXT NOT NULL, answer TEXT NOT NULL,
+        category TEXT DEFAULT 'general',
+        sort_order INTEGER DEFAULT 0,
+        is_visible INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS discount_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT UNIQUE NOT NULL,
+        type TEXT DEFAULT 'percentage',
+        value REAL DEFAULT 0,
+        min_order REAL DEFAULT 0,
+        max_uses INTEGER DEFAULT 0,
+        used_count INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        expires_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS referrals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        referrer_email TEXT NOT NULL,
+        referrer_name TEXT DEFAULT '',
+        referral_code TEXT UNIQUE NOT NULL,
+        discount_percent REAL DEFAULT 10,
+        uses INTEGER DEFAULT 0,
+        earnings REAL DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS page_views (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        page TEXT NOT NULL,
+        referrer TEXT DEFAULT '',
+        user_agent TEXT DEFAULT '',
+        ip_hash TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS booking_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_ref TEXT NOT NULL,
+        note TEXT NOT NULL,
+        author TEXT DEFAULT 'admin',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS activity_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        action TEXT NOT NULL,
+        details TEXT DEFAULT '',
+        user TEXT DEFAULT 'admin',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS deliveries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_ref TEXT NOT NULL,
+        filename TEXT NOT NULL,
+        original_name TEXT NOT NULL,
+        file_size INTEGER DEFAULT 0,
+        download_token TEXT UNIQUE NOT NULL,
+        download_count INTEGER DEFAULT 0,
+        uploaded_by TEXT DEFAULT 'admin',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS client_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expires_at DATETIME NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 `);
@@ -70,6 +162,9 @@ m("ALTER TABLE contacts ADD COLUMN is_read INTEGER DEFAULT 0");
 m("ALTER TABLE portfolio ADD COLUMN video_url TEXT DEFAULT ''");
 m("ALTER TABLE newsletter ADD COLUMN unsub_token TEXT");
 m("ALTER TABLE bookings ADD COLUMN invoice_path TEXT");
+m("ALTER TABLE bookings ADD COLUMN discount_code TEXT DEFAULT ''");
+m("ALTER TABLE bookings ADD COLUMN discount_amount REAL DEFAULT 0");
+m("ALTER TABLE admin_users ADD COLUMN role TEXT DEFAULT 'admin'");
 
 // ---- Default settings ----
 const defaults = {
@@ -266,5 +361,94 @@ module.exports = {
         const pr=db.prepare("SELECT COUNT(*) as c FROM reviews WHERE status='pending'").get();
         const offset=parseInt(db.prepare("SELECT value FROM settings WHERE key='revenue_offset'").get()?.value || '0') || 0;
         return { totalBookings:b.c, totalRevenue:b.r + offset, rawRevenue:b.r, revenueOffset:offset, unreadMessages:u.c, totalSubscribers:s.c, portfolioItems:p.c, pendingReviews:pr.c };
+    },
+
+    // --- Blog ---
+    createBlogPost(d) { return db.prepare('INSERT INTO blog_posts (title,slug,excerpt,content,cover_image,category,tags,author,status) VALUES (?,?,?,?,?,?,?,?,?)').run(d.title, d.slug, d.excerpt||'', d.content, d.cover_image||'', d.category||'general', JSON.stringify(d.tags||[]), d.author||'Admin', d.status||'draft').lastInsertRowid; },
+    updateBlogPost(id, d) { db.prepare('UPDATE blog_posts SET title=?,slug=?,excerpt=?,content=?,cover_image=?,category=?,tags=?,author=?,status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').run(d.title, d.slug, d.excerpt||'', d.content, d.cover_image||'', d.category||'general', JSON.stringify(d.tags||[]), d.author||'Admin', d.status||'draft', id); },
+    deleteBlogPost(id) { db.prepare('DELETE FROM blog_posts WHERE id=?').run(id); },
+    getBlogPost(slug) { return db.prepare('SELECT * FROM blog_posts WHERE slug=?').get(slug); },
+    getBlogPostById(id) { return db.prepare('SELECT * FROM blog_posts WHERE id=?').get(id); },
+    getPublishedPosts() { return db.prepare("SELECT * FROM blog_posts WHERE status='published' ORDER BY created_at DESC").all(); },
+    getAllBlogPosts() { return db.prepare('SELECT * FROM blog_posts ORDER BY created_at DESC').all(); },
+    incrementPostViews(slug) { db.prepare('UPDATE blog_posts SET views=views+1 WHERE slug=?').run(slug); },
+
+    // --- FAQs ---
+    createFAQ(d) { return db.prepare('INSERT INTO faqs (question,answer,category,sort_order,is_visible) VALUES (?,?,?,?,?)').run(d.question, d.answer, d.category||'general', d.sort_order||0, d.is_visible!==undefined?d.is_visible:1).lastInsertRowid; },
+    updateFAQ(id, d) { db.prepare('UPDATE faqs SET question=?,answer=?,category=?,sort_order=?,is_visible=? WHERE id=?').run(d.question, d.answer, d.category||'general', d.sort_order||0, d.is_visible!==undefined?d.is_visible:1, id); },
+    deleteFAQ(id) { db.prepare('DELETE FROM faqs WHERE id=?').run(id); },
+    getAllFAQs() { return db.prepare('SELECT * FROM faqs ORDER BY sort_order ASC, id ASC').all(); },
+    getVisibleFAQs() { return db.prepare('SELECT * FROM faqs WHERE is_visible=1 ORDER BY sort_order ASC, id ASC').all(); },
+
+    // --- Discount Codes ---
+    createDiscount(d) { return db.prepare('INSERT INTO discount_codes (code,type,value,min_order,max_uses,is_active,expires_at) VALUES (?,?,?,?,?,?,?)').run(d.code.toUpperCase(), d.type||'percentage', d.value||0, d.min_order||0, d.max_uses||0, d.is_active!==undefined?d.is_active:1, d.expires_at||null).lastInsertRowid; },
+    updateDiscount(id, d) { db.prepare('UPDATE discount_codes SET code=?,type=?,value=?,min_order=?,max_uses=?,is_active=?,expires_at=? WHERE id=?').run(d.code.toUpperCase(), d.type||'percentage', d.value||0, d.min_order||0, d.max_uses||0, d.is_active!==undefined?d.is_active:1, d.expires_at||null, id); },
+    toggleDiscount(id, isActive) { db.prepare('UPDATE discount_codes SET is_active=? WHERE id=?').run(isActive ? 1 : 0, id); },
+    deleteDiscount(id) { db.prepare('DELETE FROM discount_codes WHERE id=?').run(id); },
+    getDiscountByCode(code) { return db.prepare('SELECT * FROM discount_codes WHERE code=? AND is_active=1').get(code.toUpperCase()); },
+    getAllDiscounts() { return db.prepare('SELECT * FROM discount_codes ORDER BY created_at DESC').all(); },
+    incrementDiscountUse(id) { db.prepare('UPDATE discount_codes SET used_count=used_count+1 WHERE id=?').run(id); },
+
+    // --- Referrals ---
+    createReferral(d) { return db.prepare('INSERT INTO referrals (referrer_email,referrer_name,referral_code,discount_percent) VALUES (?,?,?,?)').run(d.referrer_email, d.referrer_name||'', d.referral_code, d.discount_percent||10).lastInsertRowid; },
+    getReferralByCode(code) { return db.prepare('SELECT * FROM referrals WHERE referral_code=? AND is_active=1').get(code); },
+    getAllReferrals() { return db.prepare('SELECT * FROM referrals ORDER BY created_at DESC').all(); },
+    updateReferral(id, d) { db.prepare('UPDATE referrals SET referral_code=?,referrer_name=?,referrer_email=?,discount_percent=? WHERE id=?').run(d.referral_code||d.code, d.referrer_name||'', d.referrer_email||'', d.discount_percent||10, id); },
+    incrementReferralUse(id, amount) { db.prepare('UPDATE referrals SET uses=uses+1,earnings=earnings+? WHERE id=?').run(amount||0, id); },
+    deleteReferral(id) { db.prepare('DELETE FROM referrals WHERE id=?').run(id); },
+
+    // --- Page Views / Analytics ---
+    trackPageView(page, referrer, ua, ipHash) { db.prepare('INSERT INTO page_views (page,referrer,user_agent,ip_hash) VALUES (?,?,?,?)').run(page, referrer||'', ua||'', ipHash||''); },
+    getPageViewStats(days) {
+        const d = days || 30;
+        const views = db.prepare(`SELECT page, COUNT(*) as count FROM page_views WHERE created_at >= datetime('now', '-${d} days') GROUP BY page ORDER BY count DESC`).all();
+        const daily = db.prepare(`SELECT date(created_at) as day, COUNT(*) as count FROM page_views WHERE created_at >= datetime('now', '-${d} days') GROUP BY date(created_at) ORDER BY day`).all();
+        const total = db.prepare(`SELECT COUNT(*) as c FROM page_views WHERE created_at >= datetime('now', '-${d} days')`).get();
+        const unique = db.prepare(`SELECT COUNT(DISTINCT ip_hash) as c FROM page_views WHERE created_at >= datetime('now', '-${d} days')`).get();
+        return { views, daily, total: total.c, unique: unique.c };
+    },
+    getRevenueByMonth() {
+        return db.prepare("SELECT strftime('%Y-%m', created_at) as month, SUM(total_amount) as revenue, COUNT(*) as count FROM bookings GROUP BY strftime('%Y-%m', created_at) ORDER BY month DESC LIMIT 12").all();
+    },
+    getPopularServices() {
+        return db.prepare('SELECT service, COUNT(*) as count, SUM(total_amount) as revenue FROM bookings GROUP BY service ORDER BY count DESC').all();
+    },
+    getBookingsByStatus() {
+        return db.prepare('SELECT status, COUNT(*) as count FROM bookings GROUP BY status').all();
+    },
+
+    // --- Booking Notes ---
+    addBookingNote(ref, note, author) { return db.prepare('INSERT INTO booking_notes (booking_ref,note,author) VALUES (?,?,?)').run(ref, note, author||'admin').lastInsertRowid; },
+    getBookingNotes(ref) { return db.prepare('SELECT * FROM booking_notes WHERE booking_ref=? ORDER BY created_at DESC').all(ref); },
+    deleteBookingNote(id) { db.prepare('DELETE FROM booking_notes WHERE id=?').run(id); },
+
+    // --- Activity Log ---
+    logActivity(action, details, user) { db.prepare('INSERT INTO activity_log (action,details,user) VALUES (?,?,?)').run(action, details||'', user||'admin'); },
+    getActivityLog(limit) { return db.prepare('SELECT * FROM activity_log ORDER BY created_at DESC LIMIT ?').all(limit||50); },
+
+    // --- File Deliveries ---
+    addDelivery(d) { return db.prepare('INSERT INTO deliveries (booking_ref,filename,original_name,file_size,download_token,uploaded_by) VALUES (?,?,?,?,?,?)').run(d.booking_ref, d.filename, d.original_name, d.file_size||0, d.download_token, d.uploaded_by||'admin').lastInsertRowid; },
+    getAllDeliveries() { return db.prepare('SELECT * FROM deliveries ORDER BY created_at DESC').all(); },
+    getDeliveriesByRef(ref) { return db.prepare('SELECT * FROM deliveries WHERE booking_ref=? ORDER BY created_at DESC').all(ref); },
+    getDeliveryByToken(token) { return db.prepare('SELECT * FROM deliveries WHERE download_token=?').get(token); },
+    incrementDownload(id) { db.prepare('UPDATE deliveries SET download_count=download_count+1 WHERE id=?').run(id); },
+    deleteDelivery(id) { db.prepare('DELETE FROM deliveries WHERE id=?').run(id); },
+
+    // --- Client Sessions ---
+    createClientSession(email, token, expiresAt) { return db.prepare('INSERT INTO client_sessions (email,token,expires_at) VALUES (?,?,?)').run(email, token, expiresAt).lastInsertRowid; },
+    getClientSession(token) { return db.prepare("SELECT * FROM client_sessions WHERE token=? AND expires_at > datetime('now')").get(token); },
+    deleteExpiredSessions() { db.prepare("DELETE FROM client_sessions WHERE expires_at <= datetime('now')").run(); },
+    deleteClientSession(token) { db.prepare('DELETE FROM client_sessions WHERE token=?').run(token); },
+
+    // --- Multi-Admin ---
+    getAllAdminUsers() { return db.prepare('SELECT id,username,role,created_at FROM admin_users ORDER BY created_at').all(); },
+    updateAdminRole(id, role) { db.prepare('UPDATE admin_users SET role=? WHERE id=?').run(role, id); },
+    deleteAdminUser(id) { db.prepare('DELETE FROM admin_users WHERE id=?').run(id); },
+    updateAdminPassword(id, hash) { db.prepare('UPDATE admin_users SET password_hash=? WHERE id=?').run(hash, id); },
+
+    // --- Portfolio Reorder ---
+    reorderPortfolio(items) {
+        const stmt = db.prepare('UPDATE portfolio SET sort_order=? WHERE id=?');
+        db.transaction(() => { items.forEach((item, i) => stmt.run(i, item.id)); })();
     },
 };

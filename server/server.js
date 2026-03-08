@@ -233,6 +233,35 @@ function adminAuth(req, res, next) {
     res.status(401).json({ error: 'Invalid credentials' });
 }
 
+// ---- Delivery file uploads ----
+const deliveriesDir = path.join(__dirname, '..', 'deliveries');
+if (!fs.existsSync(deliveriesDir)) fs.mkdirSync(deliveriesDir, { recursive: true });
+const deliveryStorage = multer.diskStorage({
+    destination: (r, f, cb) => cb(null, deliveriesDir),
+    filename: (r, f, cb) => cb(null, Date.now() + '-' + f.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')),
+});
+const deliveryUpload = multer({ storage: deliveryStorage, limits: { fileSize: 100 * 1024 * 1024 } }); // 100MB
+
+// ---- Scheduled backup interval (every 24h) ----
+setInterval(() => {
+    try {
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        const dest = path.join(backupsDir, `auto-backup-${ts}.db`);
+        db.db.backup(dest).then(() => {
+            console.log('✅ Auto-backup created:', dest);
+            // Keep only last 7 auto-backups
+            const files = fs.readdirSync(backupsDir).filter(f => f.startsWith('auto-backup-')).sort();
+            while (files.length > 7) { try { fs.unlinkSync(path.join(backupsDir, files.shift())); } catch(e) {} }
+        });
+    } catch(e) { console.warn('Auto-backup failed:', e.message); }
+}, 24 * 60 * 60 * 1000);
+
+// ---- Caching headers for static assets ----
+app.use('/css', (req, res, next) => { res.set('Cache-Control', 'public, max-age=86400'); next(); });
+app.use('/js', (req, res, next) => { res.set('Cache-Control', 'public, max-age=86400'); next(); });
+app.use('/uploads', (req, res, next) => { res.set('Cache-Control', 'public, max-age=604800'); next(); });
+app.use('/icons', (req, res, next) => { res.set('Cache-Control', 'public, max-age=604800'); next(); });
+
 // ============================= PUBLIC =============================
 
 app.get('/api/health', (r, s) => s.json({ status: 'ok', time: new Date().toISOString() }));
@@ -730,6 +759,610 @@ app.get('/api/admin/reviews', adminAuth, (r, s) => s.json(db.getAllReviews()));
 app.patch('/api/admin/reviews/:id/approve', adminAuth, (req, res) => { db.updateReviewStatus(+req.params.id, 'approved'); res.json({ ok: true }); });
 app.patch('/api/admin/reviews/:id/reject', adminAuth, (req, res) => { db.updateReviewStatus(+req.params.id, 'rejected'); res.json({ ok: true }); });
 app.delete('/api/admin/reviews/:id', adminAuth, (req, res) => { db.deleteReview(+req.params.id); res.json({ ok: true }); });
+
+// ============================= NEW FEATURES =============================
+
+// --- Page View Tracking (Analytics) ---
+app.post('/api/track', (req, res) => {
+    try {
+        const { page } = req.body;
+        if (!page) return res.status(400).json({ error: 'Page required' });
+        const ip = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || '';
+        const ipHash = crypto.createHash('sha256').update(ip + new Date().toDateString()).digest('hex').slice(0, 16);
+        db.trackPageView(page, req.headers.referer || '', (req.headers['user-agent'] || '').slice(0, 200), ipHash);
+        res.json({ ok: true });
+    } catch(e) { res.json({ ok: true }); }
+});
+
+// --- Sitemap.xml ---
+app.get('/sitemap.xml', (req, res) => {
+    const settings = db.getAllSettings();
+    const siteUrl = getSiteUrl(settings) || 'https://example.com';
+    const posts = db.getPublishedPosts();
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    xml += `  <url><loc>${siteUrl}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n`;
+    xml += `  <url><loc>${siteUrl}/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>\n`;
+    xml += `  <url><loc>${siteUrl}/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>\n`;
+    xml += `  <url><loc>${siteUrl}/blog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>\n`;
+    posts.forEach(p => { xml += `  <url><loc>${siteUrl}/blog/${p.slug}</loc><lastmod>${p.updated_at?.split(' ')[0] || ''}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>\n`; });
+    xml += `</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.send(xml);
+});
+
+// --- Blog (Public) ---
+app.get('/api/blog', (r, s) => s.json(db.getPublishedPosts().map(p => ({ ...p, tags: JSON.parse(p.tags || '[]') }))));
+app.get('/api/blog/:slug', (req, res) => {
+    const post = db.getBlogPost(req.params.slug);
+    if (!post || post.status !== 'published') return res.status(404).json({ error: 'Post not found' });
+    db.incrementPostViews(req.params.slug);
+    res.json({ ...post, tags: JSON.parse(post.tags || '[]') });
+});
+
+// --- FAQ (Public) ---
+app.get('/api/faqs', (r, s) => s.json(db.getVisibleFAQs()));
+
+// --- Discount Code Validation (Public) ---
+app.post('/api/discount/validate', (req, res) => {
+    try {
+        const { code, amount } = req.body;
+        if (!code) return res.status(400).json({ error: 'Code required' });
+        const disc = db.getDiscountByCode(code);
+        if (!disc) return res.status(404).json({ error: 'Invalid discount code' });
+        if (disc.expires_at && new Date(disc.expires_at) < new Date()) return res.status(400).json({ error: 'Code has expired' });
+        if (disc.max_uses > 0 && disc.used_count >= disc.max_uses) return res.status(400).json({ error: 'Code usage limit reached' });
+        if (disc.min_order > 0 && (amount || 0) < disc.min_order) return res.status(400).json({ error: `Minimum order $${disc.min_order} required` });
+        const discount = disc.type === 'percentage' ? Math.round((amount || 0) * disc.value / 100) : disc.value;
+        res.json({ ok: true, discount, type: disc.type, value: disc.value, code: disc.code });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Referral Validation (Public) ---
+app.post('/api/referral/validate', (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Code required' });
+        const ref = db.getReferralByCode(code);
+        if (!ref) return res.status(404).json({ error: 'Invalid referral code' });
+        res.json({ ok: true, discount_percent: ref.discount_percent, referrer_name: ref.referrer_name });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Client Portal Login ---
+app.post('/api/client/login', (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: 'Email required' });
+        const bookings = db.getAllBookings().filter(b => b.email === email);
+        if (!bookings.length) return res.status(404).json({ error: 'No bookings found for this email' });
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        db.createClientSession(email, token, expires);
+        // Send login link via email
+        const settings = db.getAllSettings();
+        const siteUrl = getSiteUrl(settings);
+        const loginUrl = siteUrl ? `${siteUrl}/client?token=${token}` : '';
+        try {
+            sendEmail({
+                to: email,
+                subject: `Your ${settings.company_name || 'CreativeStudio'} Portal Access`,
+                html: brandedHTML(`
+                    <h2 style="color:${settings.color_primary || '#1a2744'};margin:0 0 16px">Your Client Portal Access</h2>
+                    <p>You requested access to view your bookings. Use the link below to log in:</p>
+                    ${loginUrl ? `<div style="text-align:center;margin:24px 0"><a href="${loginUrl}" style="display:inline-block;background:${settings.color_primary || '#1a2744'};color:#fff;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:600">Access My Portal</a></div>` : `<p><strong>Your access token:</strong> <code>${token}</code></p>`}
+                    <p style="font-size:13px;color:#999">This link expires in 24 hours.</p>
+                `, settings),
+                settings
+            });
+        } catch(e) { console.warn('Client login email failed:', e.message); }
+        res.json({ ok: true, message: 'Check your email for the login link' });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+app.get('/api/client/portal', (req, res) => {
+    try {
+        const token = req.headers['x-client-token'] || req.query.token;
+        if (!token) return res.status(401).json({ error: 'Token required' });
+        const session = db.getClientSession(token);
+        if (!session) return res.status(401).json({ error: 'Invalid or expired token' });
+        const bookings = db.getAllBookings().filter(b => b.email === session.email).map(b => ({
+            reference: b.reference, service: b.service, status: b.status,
+            total_amount: b.total_amount, created_at: b.created_at, name: b.name,
+            invoice_path: b.invoice_path,
+            deliveries: db.getDeliveriesByRef(b.reference).map(d => ({
+                original_name: d.original_name, file_size: d.file_size,
+                download_url: `/api/delivery/download/${d.download_token}`, created_at: d.created_at
+            }))
+        }));
+        res.json({ email: session.email, bookings });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- File Delivery Download (Public with token) ---
+app.get('/api/delivery/download/:token', (req, res) => {
+    try {
+        const d = db.getDeliveryByToken(req.params.token);
+        if (!d) return res.status(404).json({ error: 'File not found' });
+        db.incrementDownload(d.id);
+        const filePath = path.join(deliveriesDir, d.filename);
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File no longer available' });
+        res.download(filePath, d.original_name);
+    } catch(e) { res.status(500).json({ error: 'Download failed' }); }
+});
+
+// --- Blog page (public HTML) ---
+app.get('/blog', (req, res) => {
+    const settings = db.getAllSettings();
+    const posts = db.getPublishedPosts();
+    res.send(renderBlogListPage(posts, settings));
+});
+app.get('/blog/:slug', (req, res) => {
+    const post = db.getBlogPost(req.params.slug);
+    if (!post || post.status !== 'published') return res.status(404).send('<h1>Post not found</h1>');
+    db.incrementPostViews(req.params.slug);
+    const settings = db.getAllSettings();
+    res.send(renderBlogPostPage(post, settings));
+});
+
+function renderBlogListPage(posts, s) {
+    const cards = posts.map(p => {
+        const tags = JSON.parse(p.tags || '[]');
+        return `<article style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:transform .3s">
+            ${p.cover_image ? `<img src="${p.cover_image}" alt="${p.title}" style="width:100%;height:200px;object-fit:cover">` : ''}
+            <div style="padding:1.5rem">
+                <div style="display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap">
+                    <span style="font-size:.7rem;background:${s.color_accent || '#c4854c'}22;color:${s.color_accent || '#c4854c'};padding:2px 10px;border-radius:20px">${p.category}</span>
+                    ${tags.map(t => `<span style="font-size:.7rem;background:#f0f0f0;padding:2px 8px;border-radius:20px">${t}</span>`).join('')}
+                </div>
+                <h3 style="margin:0 0 .5rem;font-size:1.15rem"><a href="/blog/${p.slug}" style="color:${s.color_primary || '#1a2744'};text-decoration:none">${p.title}</a></h3>
+                <p style="color:#6b7080;font-size:.9rem;line-height:1.6">${p.excerpt || p.content.replace(/<[^>]+>/g, '').slice(0, 150) + '...'}</p>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;font-size:.8rem;color:#999">
+                    <span>${new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span>${p.views || 0} views</span>
+                </div>
+            </div>
+        </article>`;
+    }).join('');
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Blog — ${s.company_name || 'CreativeStudio'}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>:root{--navy:${s.color_primary || '#1a2744'};--warm:${s.color_accent || '#c4854c'};--bg:${s.color_background || '#faf8f5'};}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:#2c3040;line-height:1.8}
+.header{background:var(--navy);padding:1.5rem 0;text-align:center}.header a{color:#fff;text-decoration:none;font-size:1.2rem;font-weight:700;font-family:'Playfair Display',serif}.header a span{color:var(--warm)}
+.content{max-width:1100px;margin:0 auto;padding:3rem 2rem}h1{font-family:'Playfair Display',serif;color:var(--navy);font-size:2.2rem;margin-bottom:2rem;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:2rem}
+.footer{text-align:center;padding:2rem;font-size:.82rem;color:#9399a8;border-top:1px solid rgba(26,39,68,.08)}</style></head>
+<body><div class="header"><a href="/">${s.company_name || 'Creative'}<span>.</span>${s.company_name ? '' : 'Studio'}</a></div>
+<div class="content"><h1>Blog</h1>${posts.length ? `<div class="grid">${cards}</div>` : '<p style="text-align:center;color:#999">No posts yet. Check back soon!</p>'}
+</div><div class="footer"><p>&copy; ${new Date().getFullYear()} ${s.company_name || 'CreativeStudio'}. <a href="/" style="color:var(--warm);text-decoration:none">Back to site</a></p></div></body></html>`;
+}
+
+function renderBlogPostPage(post, s) {
+    const tags = JSON.parse(post.tags || '[]');
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${post.title} — ${s.company_name || 'CreativeStudio'}</title>
+<meta name="description" content="${(post.excerpt || post.content.replace(/<[^>]+>/g, '').slice(0, 160)).replace(/"/g, '&quot;')}">
+<meta property="og:title" content="${post.title}"><meta property="og:type" content="article">
+${post.cover_image ? `<meta property="og:image" content="${post.cover_image}">` : ''}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>:root{--navy:${s.color_primary || '#1a2744'};--warm:${s.color_accent || '#c4854c'};--bg:${s.color_background || '#faf8f5'};}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:#2c3040;line-height:1.8}
+.header{background:var(--navy);padding:1.5rem 0;text-align:center}.header a{color:#fff;text-decoration:none;font-size:1.2rem;font-weight:700;font-family:'Playfair Display',serif}.header a span{color:var(--warm)}
+.content{max-width:800px;margin:0 auto;padding:3rem 2rem}h1{font-family:'Playfair Display',serif;color:var(--navy);font-size:2rem;margin-bottom:1rem}
+.meta{color:#999;font-size:.85rem;margin-bottom:2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center}.tag{font-size:.7rem;background:${s.color_accent || '#c4854c'}22;color:${s.color_accent || '#c4854c'};padding:2px 10px;border-radius:20px}
+.body{line-height:1.9;font-size:1.05rem}.body h2,.body h3{color:var(--navy);margin:2rem 0 1rem}.body p{margin-bottom:1rem}.body img{max-width:100%;border-radius:8px;margin:1rem 0}
+.footer{text-align:center;padding:2rem;font-size:.82rem;color:#9399a8;border-top:1px solid rgba(26,39,68,.08)}</style></head>
+<body><div class="header"><a href="/">${s.company_name || 'Creative'}<span>.</span>${s.company_name ? '' : 'Studio'}</a></div>
+<div class="content">
+${post.cover_image ? `<img src="${post.cover_image}" alt="${post.title}" style="width:100%;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:2rem">` : ''}
+<h1>${post.title}</h1>
+<div class="meta"><span>By ${post.author}</span><span>${new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span><span>${post.views || 0} views</span>${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+<div class="body">${post.content}</div>
+<div style="margin-top:3rem;padding-top:2rem;border-top:1px solid #eee"><a href="/blog" style="color:var(--warm);text-decoration:none;font-weight:600">← Back to Blog</a></div>
+</div><div class="footer"><p>&copy; ${new Date().getFullYear()} ${s.company_name || 'CreativeStudio'}. <a href="/" style="color:var(--warm);text-decoration:none">Back to site</a></p></div></body></html>`;
+}
+
+// --- Client Portal Page ---
+app.get('/client', (req, res) => {
+    const settings = db.getAllSettings();
+    res.send(renderClientPortalPage(settings));
+});
+
+function renderClientPortalPage(s) {
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Client Portal — ${s.company_name || 'CreativeStudio'}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>:root{--navy:${s.color_primary||'#1a2744'};--warm:${s.color_accent||'#c4854c'};--bg:${s.color_background||'#faf8f5'}}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:#2c3040;line-height:1.6;min-height:100vh}
+.header{background:var(--navy);padding:1.5rem 0;text-align:center}.header a{color:#fff;text-decoration:none;font-size:1.2rem;font-weight:700;font-family:'Playfair Display',serif}.header a span{color:var(--warm)}
+.wrap{max-width:900px;margin:0 auto;padding:2rem}h1{font-family:'Playfair Display',serif;color:var(--navy);font-size:1.8rem;margin-bottom:1.5rem}
+.login-box{max-width:420px;margin:4rem auto;background:#fff;padding:2.5rem;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-box h2{color:var(--navy);margin-bottom:.5rem;font-family:'Playfair Display',serif}.login-box p{color:#6b7080;margin-bottom:1.5rem;font-size:.9rem}
+input[type=email]{width:100%;padding:.7rem 1rem;border:1.5px solid #ddd;border-radius:8px;font-size:1rem;margin-bottom:1rem}
+.btn{display:inline-block;padding:.7rem 1.5rem;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;text-decoration:none}
+.btn-primary{background:var(--navy);color:#fff;width:100%}.btn-primary:hover{opacity:.9}
+.card{background:#fff;border-radius:10px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1px solid #eee}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-pending{background:#fef3e2;color:#c4854c}.badge-confirmed{background:#e3f2fd;color:#1e64c8}
+.badge-in-progress{background:#e3f2fd;color:#1e64c8}.badge-completed{background:#e8f5e9;color:#228b54}.badge-delivered{background:#e8f5e9;color:#228b54}
+.msg{padding:1rem;border-radius:8px;margin-bottom:1rem;font-size:.9rem}.msg-success{background:#e8f5e9;color:#228b54}.msg-error{background:#fbe9e7;color:#c83232}
+.dl-link{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;background:var(--warm);color:#fff;border-radius:6px;text-decoration:none;font-size:.8rem;font-weight:600;margin:.3rem .3rem 0 0}
+.footer{text-align:center;padding:2rem;font-size:.82rem;color:#9399a8}
+</style></head><body>
+<div class="header"><a href="/">${s.company_name||'Creative'}<span>.</span>${s.company_name?'':'Studio'}</a></div>
+<div class="wrap">
+<div id="loginView">
+<div class="login-box"><h2>Client Portal</h2><p>Enter your email to access your bookings, invoices, and deliverables.</p>
+<div id="loginMsg"></div>
+<form onsubmit="clientLogin(event)"><input type="email" id="clientEmail" placeholder="your@email.com" required><button type="submit" class="btn btn-primary">Access My Portal</button></form></div></div>
+<div id="portalView" style="display:none">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem"><h1>My Bookings</h1><button onclick="clientLogout()" class="btn" style="background:#eee;color:#666;font-size:.8rem">Logout</button></div>
+<div id="bookingsList"></div>
+</div>
+</div>
+<div class="footer"><p>&copy; ${new Date().getFullYear()} ${s.company_name||'CreativeStudio'}. <a href="/" style="color:var(--warm);text-decoration:none">Back to site</a></p></div>
+<script>
+const token=new URLSearchParams(location.search).get('token')||localStorage.getItem('client_token');
+if(token){localStorage.setItem('client_token',token);loadPortal(token);}
+async function clientLogin(e){e.preventDefault();const email=document.getElementById('clientEmail').value;
+const r=await fetch('/api/client/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+const d=await r.json();document.getElementById('loginMsg').innerHTML=r.ok?'<div class="msg msg-success">'+d.message+'</div>':'<div class="msg msg-error">'+d.error+'</div>';}
+async function loadPortal(t){
+try{const r=await fetch('/api/client/portal',{headers:{'x-client-token':t}});if(!r.ok){localStorage.removeItem('client_token');return;}
+const d=await r.json();document.getElementById('loginView').style.display='none';document.getElementById('portalView').style.display='block';
+const statusColors={pending:'pending',confirmed:'confirmed','in-progress':'in-progress',completed:'completed',delivered:'delivered'};
+document.getElementById('bookingsList').innerHTML=d.bookings.length?d.bookings.map(b=>'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem"><strong>'+b.service+'</strong><span class="badge badge-'+(statusColors[b.status]||'pending')+'">'+b.status+'</span></div>'
++'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.85rem;color:#6b7080;margin-bottom:.8rem"><span>Ref: <code>'+b.reference+'</code></span><span>Amount: <strong style="color:#2c3040">$'+b.total_amount+'</strong></span><span>Date: '+new Date(b.created_at).toLocaleDateString()+'</span></div>'
++(b.invoice_path?'<a href="'+b.invoice_path+'" target="_blank" class="dl-link"><i class="fas fa-file-pdf"></i> Invoice</a>':'')
++(b.deliveries&&b.deliveries.length?'<div style="margin-top:.6rem"><strong style="font-size:.8rem">Deliverables:</strong><div>'+b.deliveries.map(f=>'<a href="'+f.download_url+'" class="dl-link"><i class="fas fa-download"></i> '+f.original_name+'</a>').join('')+'</div></div>':'')
++'</div>').join(''):'<div class="card" style="text-align:center;color:#999"><i class="fas fa-folder-open" style="font-size:2rem;margin-bottom:.5rem;display:block"></i>No bookings found.</div>';
+}catch(e){localStorage.removeItem('client_token');}}
+function clientLogout(){localStorage.removeItem('client_token');location.href='/client';}
+</script></body></html>`;
+}
+
+// ============================= ADMIN (continued) =============================
+
+// --- Analytics ---
+app.get('/api/admin/analytics', adminAuth, (req, res) => {
+    try {
+        const days = parseInt(req.query.days) || 30;
+        const pvStats = db.getPageViewStats(days);
+        const monthlyRevenue = db.getRevenueByMonth();
+        const popularServices = db.getPopularServices();
+        const bookingsByStatus = db.getBookingsByStatus();
+        const recentBookings = bookingsByStatus.reduce((s, b) => s + b.count, 0);
+        const recentRevenue = monthlyRevenue.length ? monthlyRevenue[0].revenue || 0 : 0;
+        res.json({
+            pageViews: pvStats.total,
+            uniqueVisitors: pvStats.unique,
+            recentBookings,
+            recentRevenue,
+            topPages: pvStats.views.map(v => ({ page: v.page, views: v.count })),
+            popularServices,
+            monthlyRevenue,
+            dailyViews: pvStats.daily,
+            bookingsByStatus
+        });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Blog (Admin) ---
+app.get('/api/admin/blog', adminAuth, (r, s) => s.json(db.getAllBlogPosts().map(p => ({ ...p, tags: JSON.parse(p.tags || '[]') }))));
+app.post('/api/admin/blog', adminAuth, (req, res) => {
+    try {
+        const d = req.body;
+        if (!d.title || !d.content) return res.status(400).json({ error: 'Title and content required' });
+        if (!d.slug) d.slug = d.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const id = db.createBlogPost(d);
+        db.logActivity('blog_create', `Created post: ${d.title}`, req.adminUser);
+        res.json({ ok: true, id });
+    } catch(e) { res.status(500).json({ error: e.message.includes('UNIQUE') ? 'Slug already exists' : 'Failed' }); }
+});
+app.put('/api/admin/blog/:id', adminAuth, (req, res) => {
+    try { db.updateBlogPost(+req.params.id, req.body); db.logActivity('blog_update', `Updated post #${req.params.id}`, req.adminUser); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/blog/:id', adminAuth, (req, res) => {
+    try { db.deleteBlogPost(+req.params.id); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- FAQs (Admin) ---
+app.get('/api/admin/faqs', adminAuth, (r, s) => s.json(db.getAllFAQs()));
+app.post('/api/admin/faqs', adminAuth, (req, res) => {
+    try {
+        const d = req.body;
+        if (!d.question || !d.answer) return res.status(400).json({ error: 'Question and answer required' });
+        const id = db.createFAQ(d);
+        db.logActivity('faq_create', `Created FAQ: ${d.question.slice(0, 50)}`, req.adminUser);
+        res.json({ ok: true, id });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.put('/api/admin/faqs/:id', adminAuth, (req, res) => {
+    try { db.updateFAQ(+req.params.id, req.body); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/faqs/:id', adminAuth, (req, res) => {
+    try { db.deleteFAQ(+req.params.id); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Discount Codes (Admin) ---
+app.get('/api/admin/discounts', adminAuth, (r, s) => s.json(db.getAllDiscounts()));
+app.post('/api/admin/discounts', adminAuth, (req, res) => {
+    try {
+        const d = req.body;
+        if (!d.code || !d.value) return res.status(400).json({ error: 'Code and value required' });
+        const id = db.createDiscount(d);
+        db.logActivity('discount_create', `Created code: ${d.code}`, req.adminUser);
+        res.json({ ok: true, id });
+    } catch(e) { res.status(500).json({ error: e.message.includes('UNIQUE') ? 'Code already exists' : 'Failed' }); }
+});
+app.put('/api/admin/discounts/:id', adminAuth, (req, res) => {
+    try { db.updateDiscount(+req.params.id, req.body); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.patch('/api/admin/discounts/:id/toggle', adminAuth, (req, res) => {
+    try { db.toggleDiscount(+req.params.id, req.body.is_active); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/discounts/:id', adminAuth, (req, res) => {
+    try { db.deleteDiscount(+req.params.id); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Referrals (Admin) ---
+app.get('/api/admin/referrals', adminAuth, (r, s) => {
+    const refs = db.getAllReferrals().map(r => ({ ...r, code: r.referral_code }));
+    s.json(refs);
+});
+app.post('/api/admin/referrals', adminAuth, (req, res) => {
+    try {
+        const d = req.body;
+        d.referral_code = d.code || d.referral_code || 'REF-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+        d.referrer_email = d.referrer_email || '';
+        d.referrer_name = d.referrer_name || '';
+        const id = db.createReferral(d);
+        db.logActivity('referral_create', `Created referral: ${d.referral_code}`, req.adminUser);
+        res.json({ ok: true, id, code: d.referral_code });
+    } catch(e) { res.status(500).json({ error: e.message.includes('UNIQUE') ? 'Code already exists' : 'Failed' }); }
+});
+app.put('/api/admin/referrals/:id', adminAuth, (req, res) => {
+    try {
+        const d = req.body;
+        d.referral_code = d.code || d.referral_code;
+        db.updateReferral(+req.params.id, d);
+        res.json({ ok: true });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/referrals/:id', adminAuth, (req, res) => {
+    try { db.deleteReferral(+req.params.id); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Booking Notes (Admin) ---
+app.get('/api/admin/bookings/:ref/notes', adminAuth, (req, res) => {
+    try { res.json(db.getBookingNotes(req.params.ref)); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.post('/api/admin/bookings/:ref/notes', adminAuth, (req, res) => {
+    try {
+        const { note } = req.body;
+        if (!note) return res.status(400).json({ error: 'Note required' });
+        const id = db.addBookingNote(req.params.ref, note, req.adminUser);
+        res.json({ ok: true, id });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/notes/:id', adminAuth, (req, res) => {
+    try { db.deleteBookingNote(+req.params.id); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Activity Log (Admin) ---
+app.get('/api/admin/activity', adminAuth, (req, res) => {
+    try { res.json(db.getActivityLog(parseInt(req.query.limit) || 50)); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- File Delivery (Admin) ---
+app.get('/api/admin/deliveries', adminAuth, (req, res) => {
+    try { res.json(db.getAllDeliveries()); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.get('/api/admin/deliveries/:ref', adminAuth, (req, res) => {
+    try { res.json(db.getDeliveriesByRef(req.params.ref)); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.post('/api/admin/deliveries/:ref', adminAuth, deliveryUpload.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    try {
+        const token = crypto.randomBytes(24).toString('hex');
+        const id = db.addDelivery({
+            booking_ref: req.params.ref,
+            filename: req.file.filename,
+            original_name: req.file.originalname,
+            file_size: req.file.size,
+            download_token: token,
+            uploaded_by: req.adminUser
+        });
+        db.logActivity('delivery_upload', `Uploaded file for ${req.params.ref}: ${req.file.originalname}`, req.adminUser);
+
+        // Notify client about new delivery
+        const booking = db.getBookingByRef(req.params.ref);
+        if (booking) {
+            const settings = db.getAllSettings();
+            const siteUrl = getSiteUrl(settings);
+            const downloadUrl = siteUrl ? `${siteUrl}/api/delivery/download/${token}` : '';
+            try {
+                sendEmail({
+                    to: booking.email,
+                    subject: `New file available — ${req.file.originalname}`,
+                    html: brandedHTML(`
+                        <h2 style="color:${settings.color_primary || '#1a2744'};margin:0 0 16px">New File Available</h2>
+                        <p>Hi ${booking.name},</p>
+                        <p>A new file has been uploaded for your project <strong>${booking.service}</strong> (Ref: ${req.params.ref}):</p>
+                        <div style="background:#faf8f5;padding:16px 20px;border-radius:8px;margin:16px 0">
+                            <p style="margin:0"><strong>${req.file.originalname}</strong></p>
+                            <p style="margin:4px 0 0;font-size:.85rem;color:#6b7080">${(req.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                        ${downloadUrl ? `<div style="text-align:center;margin:24px 0"><a href="${downloadUrl}" style="display:inline-block;background:${settings.color_accent || '#c4854c'};color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600">Download File</a></div>` : ''}
+                        ${siteUrl ? `<p style="font-size:.85rem;color:#999">You can also view all your files in the <a href="${siteUrl}/client" style="color:${settings.color_accent || '#c4854c'}">Client Portal</a>.</p>` : ''}
+                    `, settings),
+                    settings
+                });
+            } catch(e) { console.warn('Delivery notification failed:', e.message); }
+        }
+        res.json({ ok: true, id, token, download_url: `/api/delivery/download/${token}` });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/deliveries/file/:id', adminAuth, (req, res) => {
+    try { db.deleteDelivery(+req.params.id); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- CSV Export (Admin) ---
+app.get('/api/admin/export/:type', adminAuth, (req, res) => {
+    try {
+        const type = req.params.type;
+        let rows = [], headers = [];
+        if (type === 'bookings') {
+            headers = ['Reference','Name','Email','Phone','Service','Amount','Status','Date'];
+            rows = db.getAllBookings().map(b => [b.reference, b.name, b.email, b.phone, b.service, b.total_amount, b.status, b.created_at]);
+        } else if (type === 'contacts') {
+            headers = ['Name','Email','Subject','Message','Read','Date'];
+            rows = db.getAllContacts().map(c => [c.name, c.email, c.subject, c.message.replace(/[\n\r]+/g, ' '), c.is_read ? 'Yes' : 'No', c.created_at]);
+        } else if (type === 'subscribers') {
+            headers = ['Email','Date'];
+            rows = db.getAllSubscribers().map(s => [s.email, s.subscribed_at]);
+        } else if (type === 'reviews') {
+            headers = ['Name','Email','Rating','Review','Service','Status','Date'];
+            rows = db.getAllReviews().map(r => [r.name, r.email, r.rating, r.text.replace(/[\n\r]+/g, ' '), r.service_used, r.status, r.created_at]);
+        } else {
+            return res.status(400).json({ error: 'Invalid export type' });
+        }
+        const csvEscape = v => `"${String(v || '').replace(/"/g, '""')}"`;
+        const csv = [headers.join(','), ...rows.map(r => r.map(csvEscape).join(','))].join('\n');
+        res.set('Content-Type', 'text/csv');
+        res.set('Content-Disposition', `attachment; filename="${type}-export-${new Date().toISOString().split('T')[0]}.csv"`);
+        res.send(csv);
+    } catch(e) { res.status(500).json({ error: 'Export failed' }); }
+});
+
+// --- Multi-Admin Management ---
+app.get('/api/admin/users', adminAuth, (req, res) => {
+    try { res.json(db.getAllAdminUsers()); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.post('/api/admin/users', adminAuth, async (req, res) => {
+    try {
+        const { username, password, role } = req.body;
+        if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+        const hash = await bcrypt.hash(password, SALT_ROUNDS);
+        const id = db.createAdminUser(username, hash);
+        if (role) db.updateAdminRole(id, role);
+        db.logActivity('admin_create', `Created admin user: ${username} (${role || 'admin'})`, req.adminUser);
+        res.json({ ok: true, id });
+    } catch(e) { res.status(500).json({ error: e.message.includes('UNIQUE') ? 'Username already exists' : 'Failed' }); }
+});
+app.put('/api/admin/users/:id/role', adminAuth, (req, res) => {
+    try { db.updateAdminRole(+req.params.id, req.body.role); res.json({ ok: true }); }
+    catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+app.delete('/api/admin/users/:id', adminAuth, (req, res) => {
+    try {
+        if (db.adminUserCount() <= 1) return res.status(400).json({ error: 'Cannot delete the last admin user' });
+        db.deleteAdminUser(+req.params.id);
+        res.json({ ok: true });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Bulk Newsletter ---
+app.post('/api/admin/newsletter/send', adminAuth, async (req, res) => {
+    try {
+        const { subject, message } = req.body;
+        if (!subject || !message) return res.status(400).json({ error: 'Subject and message required' });
+        const subscribers = db.getAllSubscribers();
+        const settings = db.getAllSettings();
+        let sent = 0, failed = 0;
+        for (const sub of subscribers) {
+            try {
+                const unsubUrl = getSiteUrl(settings) + `/api/newsletter/unsubscribe/${sub.unsub_token}`;
+                const bodyHTML = message.split('\n').map(line => line.trim() ? `<p style="margin:6px 0">${line}</p>` : '<br>').join('');
+                await sendEmail({
+                    to: sub.email,
+                    subject,
+                    html: brandedHTML(`${bodyHTML}<div style="margin-top:24px;padding-top:16px;border-top:1px solid #eee;text-align:center"><a href="${unsubUrl}" style="color:#999;font-size:12px;text-decoration:underline">Unsubscribe</a></div>`, settings),
+                    settings
+                });
+                sent++;
+            } catch(e) { failed++; }
+        }
+        db.logActivity('newsletter_send', `Sent newsletter to ${sent}/${subscribers.length} subscribers`, req.adminUser);
+        res.json({ ok: true, sent, failed, total: subscribers.length });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Portfolio Reorder ---
+app.put('/api/admin/portfolio/reorder', adminAuth, (req, res) => {
+    try {
+        const { items } = req.body;
+        if (!items || !Array.isArray(items)) return res.status(400).json({ error: 'Items array required' });
+        db.reorderPortfolio(items);
+        res.json({ ok: true });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
+
+// --- Batch Upload (multiple images) ---
+app.post('/api/admin/upload/batch', adminAuth, upload.array('images', 20), async (req, res) => {
+    if (!req.files || !req.files.length) return res.status(400).json({ error: 'No files' });
+    try {
+        const urls = [];
+        for (const file of req.files) {
+            const url = await compressImage(file.path, file.filename);
+            urls.push(url);
+        }
+        res.json({ ok: true, urls });
+    } catch(e) { res.status(500).json({ error: 'Upload failed' }); }
+});
+
+// --- Automated Reminders Check ---
+app.post('/api/admin/send-reminders', adminAuth, async (req, res) => {
+    try {
+        const settings = db.getAllSettings();
+        const bookings = db.getAllBookings();
+        const now = new Date();
+        let sent = 0;
+        for (const b of bookings) {
+            if (!b.deadline || b.status === 'completed' || b.status === 'delivered') continue;
+            const deadline = new Date(b.deadline);
+            const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+            // Remind admin about bookings due within 3 days
+            if (daysUntil <= 3 && daysUntil >= 0) {
+                try {
+                    await sendEmail({
+                        to: process.env.NOTIFY_EMAIL || settings.email || '',
+                        subject: `⏰ Deadline Reminder: ${b.service} for ${b.name} — ${daysUntil === 0 ? 'TODAY' : `in ${daysUntil} day(s)`}`,
+                        html: brandedHTML(`
+                            <h2 style="color:${settings.color_primary || '#1a2744'};margin:0 0 16px">⏰ Deadline Reminder</h2>
+                            <p><strong>${b.service}</strong> for ${b.name} is due <strong>${daysUntil === 0 ? 'today' : `in ${daysUntil} day(s)`}</strong>.</p>
+                            <div style="background:#faf8f5;padding:12px 16px;border-radius:8px;margin:12px 0">
+                                <p style="margin:4px 0"><strong>Ref:</strong> ${b.reference}</p>
+                                <p style="margin:4px 0"><strong>Status:</strong> ${b.status}</p>
+                                <p style="margin:4px 0"><strong>Deadline:</strong> ${deadline.toLocaleDateString()}</p>
+                            </div>
+                        `, settings),
+                        settings
+                    });
+                    sent++;
+                } catch(e) {}
+            }
+        }
+        db.logActivity('reminders_sent', `Sent ${sent} deadline reminders`, req.adminUser);
+        res.json({ ok: true, sent });
+    } catch(e) { res.status(500).json({ error: 'Failed' }); }
+});
 
 // Backup
 app.post('/api/admin/backup', adminAuth, (req, res) => {

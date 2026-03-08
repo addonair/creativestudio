@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /uploads/tmp/
+Disallow: /invoices/
+Disallow: /backups/
+
+Sitemap: /sitemap.xml

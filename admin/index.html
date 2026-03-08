@@ -48,10 +48,20 @@
         <a href="#" data-section="portfolio"><i class="fas fa-images"></i> Portfolio</a>
         <a href="#" data-section="reviews"><i class="fas fa-star"></i> Reviews <span class="badge" id="reviewBadge" style="display:none">0</span></a>
         <a href="#" data-section="pages"><i class="fas fa-file-alt"></i> Pages</a>
+        <a href="#" data-section="blog"><i class="fas fa-blog"></i> Blog</a>
+        <a href="#" data-section="faqs"><i class="fas fa-question-circle"></i> FAQs</a>
         <div class="sidebar-divider"></div><div class="sidebar-label">Customers</div>
         <a href="#" data-section="messages"><i class="fas fa-envelope"></i> Messages <span class="badge" id="msgBadge" style="display:none">0</span></a>
         <a href="#" data-section="bookings"><i class="fas fa-calendar-check"></i> Bookings</a>
         <a href="#" data-section="subscribers"><i class="fas fa-users"></i> Subscribers</a>
+        <a href="#" data-section="deliveries"><i class="fas fa-cloud-upload-alt"></i> Deliveries</a>
+        <div class="sidebar-divider"></div><div class="sidebar-label">Marketing</div>
+        <a href="#" data-section="discounts"><i class="fas fa-tags"></i> Discounts</a>
+        <a href="#" data-section="referrals"><i class="fas fa-share-alt"></i> Referrals</a>
+        <div class="sidebar-divider"></div><div class="sidebar-label">System</div>
+        <a href="#" data-section="analytics"><i class="fas fa-chart-bar"></i> Analytics</a>
+        <a href="#" data-section="activity"><i class="fas fa-history"></i> Activity Log</a>
+        <a href="#" data-section="admin-users"><i class="fas fa-user-shield"></i> Admin Users</a>
         <div class="sidebar-divider"></div><div class="sidebar-label">Settings</div>
         <a href="#" data-section="site-settings"><i class="fas fa-cog"></i> Site Settings</a>
         <a href="#" data-section="appearance"><i class="fas fa-paint-brush"></i> Appearance</a>
@@ -114,20 +124,32 @@
 
 <!-- MESSAGES -->
 <div class="section" id="sec-messages">
-    <div class="page-header"><h1>Messages</h1></div>
+    <div class="page-header"><h1>Messages</h1><button class="btn btn-outline" onclick="exportCSV('contacts')"><i class="fas fa-download"></i> Export CSV</button></div>
+    <div style="margin-bottom:1rem"><input type="text" id="msgSearch" placeholder="Search messages..." oninput="filterMessages()" style="padding:.5rem .8rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.85rem;width:100%;max-width:320px"></div>
     <div class="card"><table><thead><tr><th>Status</th><th>Name</th><th>Email</th><th>Subject</th><th>Date</th><th>Actions</th></tr></thead><tbody id="mTbl"></tbody></table></div>
 </div>
 
 <!-- BOOKINGS -->
 <div class="section" id="sec-bookings">
-    <div class="page-header"><h1>Bookings</h1><button class="btn btn-outline" style="color:var(--error);border-color:currentColor" onclick="clearAllBookings()"><i class="fas fa-trash-alt"></i> Clear All</button></div>
+    <div class="page-header"><h1>Bookings</h1><div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn btn-outline" onclick="exportCSV('bookings')"><i class="fas fa-download"></i> Export CSV</button><button class="btn btn-outline" onclick="sendReminders()"><i class="fas fa-bell"></i> Send Reminders</button><button class="btn btn-outline" style="color:var(--error);border-color:currentColor" onclick="clearAllBookings()"><i class="fas fa-trash-alt"></i> Clear All</button></div></div>
+    <div style="margin-bottom:1rem;display:flex;gap:.8rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="bookingSearch" placeholder="Search bookings..." oninput="filterBookings()" style="padding:.5rem .8rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.85rem;width:100%;max-width:280px">
+        <select id="bookingStatusFilter" onchange="filterBookings()" style="padding:.5rem .8rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.85rem"><option value="">All Statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="in-progress">In Progress</option><option value="delivered">Delivered</option><option value="completed">Completed</option></select>
+    </div>
     <div class="card"><table><thead><tr><th>Reference</th><th>Client</th><th>Service</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="bTbl"></tbody></table></div>
 </div>
 
 <!-- SUBSCRIBERS -->
 <div class="section" id="sec-subscribers">
-    <div class="page-header"><h1>Subscribers</h1></div>
+    <div class="page-header"><h1>Subscribers</h1><div style="display:flex;gap:.5rem"><button class="btn btn-outline" onclick="exportCSV('subscribers')"><i class="fas fa-download"></i> Export CSV</button><button class="btn btn-primary" onclick="openNewsletter()"><i class="fas fa-paper-plane"></i> Send Newsletter</button></div></div>
     <div class="card"><table><thead><tr><th>Email</th><th>Subscribed</th><th>Actions</th></tr></thead><tbody id="sTbl"></tbody></table></div>
+    <div id="newsletterPanel" style="display:none;margin-top:1rem">
+        <div class="card"><div class="card-header"><span>Compose Newsletter</span><button class="btn btn-outline btn-sm" onclick="document.getElementById('newsletterPanel').style.display='none'"><i class="fas fa-times"></i></button></div><div class="card-body">
+            <div class="field"><label>Subject</label><input type="text" id="nlSubject" placeholder="Your newsletter subject..."></div>
+            <div class="field"><label>Message</label><textarea id="nlBody" rows="8" placeholder="Write your newsletter content here..."></textarea><div class="help">Use **bold** for emphasis. Lines with • become bullets.</div></div>
+            <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem"><button class="btn btn-outline" onclick="document.getElementById('newsletterPanel').style.display='none'">Cancel</button><button class="btn btn-warm" onclick="sendNewsletter()"><i class="fas fa-paper-plane"></i> Send to All Subscribers</button></div>
+        </div></div>
+    </div>
 </div>
 
 <!-- SITE SETTINGS -->
@@ -236,6 +258,64 @@
     </div></div></div>
 </div>
 
+<!-- BLOG -->
+<div class="section" id="sec-blog">
+    <div class="page-header"><h1>Blog</h1><button class="btn btn-primary" onclick="openBlogEditor()"><i class="fas fa-plus"></i> New Post</button></div>
+    <div class="card"><table><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Views</th><th>Date</th><th>Actions</th></tr></thead><tbody id="blogTbl"></tbody></table></div>
+</div>
+
+<!-- FAQS -->
+<div class="section" id="sec-faqs">
+    <div class="page-header"><h1>FAQs</h1><button class="btn btn-primary" onclick="openFaqEditor()"><i class="fas fa-plus"></i> Add FAQ</button></div>
+    <div class="card"><table><thead><tr><th>Order</th><th>Question</th><th>Visible</th><th>Actions</th></tr></thead><tbody id="faqTbl"></tbody></table></div>
+</div>
+
+<!-- DELIVERIES -->
+<div class="section" id="sec-deliveries">
+    <div class="page-header"><h1>File Deliveries</h1><button class="btn btn-primary" onclick="openDeliveryUpload()"><i class="fas fa-cloud-upload-alt"></i> Upload File</button></div>
+    <div class="card"><table><thead><tr><th>Booking</th><th>File</th><th>Size</th><th>Downloads</th><th>Date</th><th>Actions</th></tr></thead><tbody id="delivTbl"></tbody></table></div>
+</div>
+
+<!-- DISCOUNTS -->
+<div class="section" id="sec-discounts">
+    <div class="page-header"><h1>Discount Codes</h1><button class="btn btn-primary" onclick="openDiscountEditor()"><i class="fas fa-plus"></i> New Code</button></div>
+    <div class="card"><table><thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Min Order</th><th>Uses</th><th>Status</th><th>Expires</th><th>Actions</th></tr></thead><tbody id="discTbl"></tbody></table></div>
+</div>
+
+<!-- REFERRALS -->
+<div class="section" id="sec-referrals">
+    <div class="page-header"><h1>Referral Program</h1><button class="btn btn-primary" onclick="openReferralEditor()"><i class="fas fa-plus"></i> New Referral</button></div>
+    <div class="card"><table><thead><tr><th>Code</th><th>Referrer</th><th>Discount %</th><th>Uses</th><th>Earnings</th><th>Active</th><th>Actions</th></tr></thead><tbody id="refTbl"></tbody></table></div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="section" id="sec-analytics">
+    <div class="page-header"><h1>Analytics</h1></div>
+    <div class="stats-grid" id="analyticsStats">
+        <div class="stat-card"><div class="lb">Page Views (30d)</div><div class="vl" id="aViews">—</div></div>
+        <div class="stat-card"><div class="lb">Unique Visitors</div><div class="vl" id="aVisitors">—</div></div>
+        <div class="stat-card"><div class="lb">Bookings (30d)</div><div class="vl" id="aBookings">—</div></div>
+        <div class="stat-card"><div class="lb">Revenue (30d)</div><div class="vl" id="aRevenue">—</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="card"><div class="card-header">Top Pages</div><table><thead><tr><th>Page</th><th>Views</th></tr></thead><tbody id="topPagesTbl"></tbody></table></div>
+        <div class="card"><div class="card-header">Popular Services</div><table><thead><tr><th>Service</th><th>Bookings</th><th>Revenue</th></tr></thead><tbody id="popSvcTbl"></tbody></table></div>
+    </div>
+    <div class="card" style="margin-top:1rem"><div class="card-header">Monthly Revenue</div><table><thead><tr><th>Month</th><th>Bookings</th><th>Revenue</th></tr></thead><tbody id="monthRevTbl"></tbody></table></div>
+</div>
+
+<!-- ACTIVITY LOG -->
+<div class="section" id="sec-activity">
+    <div class="page-header"><h1>Activity Log</h1></div>
+    <div class="card"><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody id="actTbl"></tbody></table></div>
+</div>
+
+<!-- ADMIN USERS -->
+<div class="section" id="sec-admin-users">
+    <div class="page-header"><h1>Admin Users</h1><button class="btn btn-primary" onclick="openAdminUserEditor()"><i class="fas fa-plus"></i> Add Admin</button></div>
+    <div class="card"><table><thead><tr><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminTbl"></tbody></table></div>
+</div>
+
 <!-- APPEARANCE -->
 <div class="section" id="sec-appearance">
     <div class="page-header"><h1>Appearance</h1><div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn btn-outline" onclick="resetAppearance()"><i class="fas fa-undo"></i> Reset to Default</button><button class="btn btn-warm" onclick="saveSettings()"><i class="fas fa-save"></i> Save</button></div></div>
@@ -306,6 +386,60 @@
     <div class="field"><label>Message</label><textarea id="cmBody" rows="6" placeholder="Hi [name], just wanted to update you on your project..."></textarea></div>
 </div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('clientMsgModal')">Cancel</button><button class="btn btn-primary" onclick="sendClientMsg()"><i class="fas fa-paper-plane"></i> Send</button></div></div></div>
 
+<!-- BLOG EDITOR MODAL -->
+<div class="modal-overlay" id="blogModal"><div class="modal modal-lg"><div class="modal-header"><h3 id="blogModalTitle">New Blog Post</h3><button class="modal-close" onclick="cM('blogModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="blogEditId">
+    <div class="field-row"><div class="field"><label>Title *</label><input type="text" id="blogTitle"></div><div class="field"><label>Category</label><select id="blogCategory"><option value="general">General</option><option value="design">Design</option><option value="tips">Tips & Tricks</option><option value="news">News</option><option value="tutorial">Tutorial</option><option value="case-study">Case Study</option></select></div></div>
+    <div class="field"><label>Excerpt</label><textarea id="blogExcerpt" rows="2" placeholder="Short summary..."></textarea></div>
+    <div class="field"><label>Content *</label><textarea id="blogContent" rows="14" style="font-family:monospace;font-size:.84rem" placeholder="Write your post content (HTML supported)..."></textarea></div>
+    <div class="field-row"><div class="field"><label>Tags (comma separated)</label><input type="text" id="blogTags" placeholder="design, tips, branding"></div><div class="field"><label>Cover Image URL</label><input type="text" id="blogCover" placeholder="https://..."></div></div>
+    <div class="field-row"><div class="field"><label>Author</label><input type="text" id="blogAuthor" value="Admin"></div><div class="field"><label>Status</label><select id="blogStatus"><option value="draft">Draft</option><option value="published">Published</option></select></div></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('blogModal')">Cancel</button><button class="btn btn-primary" onclick="saveBlogPost()"><i class="fas fa-save"></i> Save</button></div></div></div>
+
+<!-- FAQ EDITOR MODAL -->
+<div class="modal-overlay" id="faqModal"><div class="modal"><div class="modal-header"><h3 id="faqModalTitle">Add FAQ</h3><button class="modal-close" onclick="cM('faqModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="faqEditId">
+    <div class="field"><label>Question *</label><input type="text" id="faqQuestion"></div>
+    <div class="field"><label>Answer *</label><textarea id="faqAnswer" rows="5"></textarea></div>
+    <div class="field-row"><div class="field"><label>Sort Order</label><input type="number" id="faqOrder" value="0"></div><div class="field"><label>Visible</label><select id="faqVisible"><option value="1">Yes</option><option value="0">No</option></select></div></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('faqModal')">Cancel</button><button class="btn btn-primary" onclick="saveFaq()"><i class="fas fa-save"></i> Save</button></div></div></div>
+
+<!-- DISCOUNT CODE MODAL -->
+<div class="modal-overlay" id="discountModal"><div class="modal"><div class="modal-header"><h3 id="discModalTitle">New Discount Code</h3><button class="modal-close" onclick="cM('discountModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="discEditId">
+    <div class="field-row"><div class="field"><label>Code *</label><input type="text" id="discCode" placeholder="SAVE20" style="text-transform:uppercase"></div><div class="field"><label>Type</label><select id="discType"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed Amount ($)</option></select></div></div>
+    <div class="field-row"><div class="field"><label>Value *</label><input type="number" id="discValue" step="0.01" placeholder="20"></div><div class="field"><label>Min Order ($)</label><input type="number" id="discMinOrder" value="0" step="0.01"></div></div>
+    <div class="field-row"><div class="field"><label>Max Uses (0=unlimited)</label><input type="number" id="discMaxUses" value="0"></div><div class="field"><label>Expires At</label><input type="datetime-local" id="discExpires"></div></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('discountModal')">Cancel</button><button class="btn btn-primary" onclick="saveDiscount()"><i class="fas fa-save"></i> Save</button></div></div></div>
+
+<!-- REFERRAL MODAL -->
+<div class="modal-overlay" id="referralModal"><div class="modal"><div class="modal-header"><h3 id="refModalTitle">New Referral</h3><button class="modal-close" onclick="cM('referralModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="refEditId">
+    <div class="field-row"><div class="field"><label>Code *</label><input type="text" id="refCode" placeholder="FRIEND2024" style="text-transform:uppercase"></div><div class="field"><label>Referrer Name *</label><input type="text" id="refName"></div></div>
+    <div class="field-row"><div class="field"><label>Referrer Email</label><input type="email" id="refEmail"></div><div class="field"><label>Discount Percent</label><input type="number" id="refDiscount" value="10" min="1" max="100"></div></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('referralModal')">Cancel</button><button class="btn btn-primary" onclick="saveReferral()"><i class="fas fa-save"></i> Save</button></div></div></div>
+
+<!-- DELIVERY UPLOAD MODAL -->
+<div class="modal-overlay" id="deliveryModal"><div class="modal"><div class="modal-header"><h3>Upload Delivery File</h3><button class="modal-close" onclick="cM('deliveryModal')">&times;</button></div><div class="modal-body">
+    <div class="field"><label>Booking Reference *</label><input type="text" id="delivRef" placeholder="CS-XXXX"></div>
+    <div class="field"><label>File *</label><div class="upload-area"><input type="file" id="delivFile"><i class="fas fa-cloud-upload-alt"></i><p>Select file to deliver (max 100MB)</p></div></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('deliveryModal')">Cancel</button><button class="btn btn-primary" onclick="uploadDelivery()"><i class="fas fa-upload"></i> Upload</button></div></div></div>
+
+<!-- ADMIN USER MODAL -->
+<div class="modal-overlay" id="adminUserModal"><div class="modal"><div class="modal-header"><h3 id="adminModalTitle">Add Admin User</h3><button class="modal-close" onclick="cM('adminUserModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="adminEditId">
+    <div class="field"><label>Username *</label><input type="text" id="adminUsername"></div>
+    <div class="field"><label>Password *</label><input type="password" id="adminPassword"><div class="help">Min 6 characters</div></div>
+    <div class="field"><label>Role</label><select id="adminRole"><option value="admin">Admin</option><option value="editor">Editor</option><option value="viewer">Viewer</option></select></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('adminUserModal')">Cancel</button><button class="btn btn-primary" onclick="saveAdminUser()"><i class="fas fa-save"></i> Save</button></div></div></div>
+
+<!-- BOOKING NOTES MODAL -->
+<div class="modal-overlay" id="notesModal"><div class="modal"><div class="modal-header"><h3>Booking Notes</h3><button class="modal-close" onclick="cM('notesModal')">&times;</button></div><div class="modal-body">
+    <input type="hidden" id="notesRef">
+    <div id="notesList" style="margin-bottom:1rem;max-height:300px;overflow-y:auto"></div>
+    <div class="field"><label>Add Note</label><textarea id="newNote" rows="3" placeholder="Type a note..."></textarea></div>
+</div><div class="modal-footer"><button class="btn btn-outline" onclick="cM('notesModal')">Cancel</button><button class="btn btn-primary" onclick="addNote()"><i class="fas fa-plus"></i> Add Note</button></div></div></div>
+
 <script>
 const API='/api';let auth='';let allSettings={};
 
@@ -338,7 +472,7 @@ function showTab(id,el){document.querySelectorAll('.tab-content').forEach(t=>t.s
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch{return d;}}
 function stars(n){return Array(5).fill(0).map((_,i)=>i<n?'<i class="fas fa-star"></i>':'<i class="fas fa-star dim"></i>').join('');}
-async function loadAll(){await Promise.all([loadStats(),loadPortfolio(),loadReviews(),loadMessages(),loadBookings(),loadSubscribers(),loadSettings(),loadPages()]);}
+async function loadAll(){await Promise.all([loadStats(),loadPortfolio(),loadReviews(),loadMessages(),loadBookings(),loadSubscribers(),loadSettings(),loadPages(),loadBlog(),loadFaqs(),loadDiscounts(),loadReferrals(),loadDeliveries(),loadAdminUsers(),loadActivity(),loadAnalytics()]);}
 
 // Color picker sync
 const colorKeys=['color_primary','color_primary_light','color_accent','color_background','color_text','color_text_muted'];
@@ -535,14 +669,20 @@ async function delRev(id){if(!confirm('Delete?'))return;await q('DELETE',`/admin
 
 // ---- MESSAGES ----
 let allMsgs=[];
-async function loadMessages(){allMsgs=await q('GET','/admin/contacts')||[];const t=document.getElementById('mTbl');if(!allMsgs.length){t.innerHTML='<tr><td colspan="6"><div class="empty"><i class="fas fa-envelope-open"></i><p>No messages.</p></div></td></tr>';return;}t.innerHTML=allMsgs.map(m=>`<tr style="${!m.is_read?'font-weight:600':''}"><td><span class="sb ${m.is_read?'':'sb-unread'}">${m.is_read?'Read':'New'}</span></td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.subject||'—')}</td><td>${fd(m.created_at)}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="viewMsg(${m.id})"><i class="fas fa-eye"></i></button><button class="btn btn-danger btn-sm" onclick="delMsg(${m.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+async function loadMessages(){allMsgs=await q('GET','/admin/contacts')||[];renderMessages(allMsgs);}
+function renderMessages(msgs){const t=document.getElementById('mTbl');if(!msgs.length){t.innerHTML='<tr><td colspan="6"><div class="empty"><i class="fas fa-envelope-open"></i><p>No messages.</p></div></td></tr>';return;}t.innerHTML=msgs.map(m=>`<tr style="${!m.is_read?'font-weight:600':''}"><td><span class="sb ${m.is_read?'':'sb-unread'}">${m.is_read?'Read':'New'}</span></td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.subject||'—')}</td><td>${fd(m.created_at)}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="viewMsg(${m.id})"><i class="fas fa-eye"></i></button><button class="btn btn-danger btn-sm" onclick="delMsg(${m.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function filterMessages(){const s=document.getElementById('msgSearch').value.toLowerCase();renderMessages(allMsgs.filter(m=>[m.name,m.email,m.subject,m.message].join(' ').toLowerCase().includes(s)));}
 async function viewMsg(id){const m=allMsgs.find(x=>x.id===id);if(!m)return;document.getElementById('mmT').textContent=m.subject||'No Subject';document.getElementById('mmF').textContent=m.name+' ('+m.email+')';document.getElementById('mmD').textContent=new Date(m.created_at).toLocaleString();document.getElementById('mmB').textContent=m.message;document.getElementById('mmR').href='mailto:'+m.email+'?subject=Re: '+(m.subject||'');document.getElementById('mmDel').onclick=()=>{delMsg(id);cM('msgModal');};document.getElementById('msgModal').classList.add('show');if(!m.is_read){await q('PATCH',`/admin/contacts/${id}/read`);m.is_read=1;loadMessages();loadStats();}}
 async function delMsg(id){if(!confirm('Delete?'))return;await q('DELETE',`/admin/contacts/${id}`);loadMessages();loadStats();}
 
 // ---- BOOKINGS (with status update) ----
 const statusOpts=['pending','confirmed','in-progress','delivered','completed'];
-async function loadBookings(){const bk=await q('GET','/admin/bookings')||[];const t=document.getElementById('bTbl');if(!bk.length){t.innerHTML='<tr><td colspan="7"><div class="empty"><i class="fas fa-calendar"></i><p>No bookings.</p></div></td></tr>';return;}t.innerHTML=bk.map(b=>`<tr><td><code style="font-size:.73rem">${esc(b.reference||'—')}</code></td><td><strong>${esc(b.name)}</strong><br><span style="font-size:.73rem;color:var(--muted)">${esc(b.email)}</span></td><td>${esc(b.service||'—')}</td><td><strong>$${b.total_amount||0}</strong></td><td><select onchange="updBooking('${esc(b.reference)}',this.value)" style="padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;font-size:.75rem">${statusOpts.map(s=>`<option value="${s}"${b.status===s?' selected':''}>${s}</option>`).join('')}</select></td><td>${fd(b.created_at)}</td><td><div class="ac">${b.invoice_path?`<a href="${b.invoice_path}" target="_blank" class="btn btn-outline btn-sm" title="Download Invoice PDF"><i class="fas fa-file-pdf"></i></a> `:''}<button class="btn btn-outline btn-sm" onclick="openClientMsg('${esc(b.email)}','${esc(b.name)}','${esc(b.reference)}','${esc(b.service||'')}')" title="Message client"><i class="fas fa-envelope"></i></button> <button class="btn btn-outline btn-sm" style="color:var(--error)" onclick="delBooking(${b.id})" title="Delete booking"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+let allBookings=[];
+async function loadBookings(){allBookings=await q('GET','/admin/bookings')||[];renderBookings(allBookings);}
+function renderBookings(bk){const t=document.getElementById('bTbl');if(!bk.length){t.innerHTML='<tr><td colspan="7"><div class="empty"><i class="fas fa-calendar"></i><p>No bookings.</p></div></td></tr>';return;}t.innerHTML=bk.map(b=>`<tr><td><code style="font-size:.73rem">${esc(b.reference||'—')}</code>${b.discount_code?`<br><span class="tg"><i class="fas fa-tag"></i> ${esc(b.discount_code)}</span>`:''}</td><td><strong>${esc(b.name)}</strong><br><span style="font-size:.73rem;color:var(--muted)">${esc(b.email)}</span></td><td>${esc(b.service||'—')}</td><td><strong>$${b.total_amount||0}</strong>${b.discount_amount?`<br><span style="font-size:.7rem;color:var(--success)">-$${b.discount_amount}</span>`:''}</td><td><select onchange="updBooking('${esc(b.reference)}',this.value)" style="padding:.25rem .4rem;border:1px solid var(--border);border-radius:4px;font-size:.75rem">${statusOpts.map(s=>`<option value="${s}"${b.status===s?' selected':''}>${s}</option>`).join('')}</select></td><td>${fd(b.created_at)}</td><td><div class="ac">${b.invoice_path?`<a href="${b.invoice_path}" target="_blank" class="btn btn-outline btn-sm" title="Invoice"><i class="fas fa-file-pdf"></i></a>`:''}<button class="btn btn-outline btn-sm" onclick="openNotes('${esc(b.reference)}')" title="Notes"><i class="fas fa-sticky-note"></i></button><button class="btn btn-outline btn-sm" onclick="openClientMsg('${esc(b.email)}','${esc(b.name)}','${esc(b.reference)}','${esc(b.service||'')}')" title="Message"><i class="fas fa-envelope"></i></button><button class="btn btn-outline btn-sm" style="color:var(--error)" onclick="delBooking(${b.id})" title="Delete"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function filterBookings(){const s=document.getElementById('bookingSearch').value.toLowerCase();const st=document.getElementById('bookingStatusFilter').value;renderBookings(allBookings.filter(b=>{const matchSearch=!s||[b.reference,b.name,b.email,b.service].join(' ').toLowerCase().includes(s);const matchStatus=!st||b.status===st;return matchSearch&&matchStatus;}));}
 async function updBooking(ref,status){const r=await q('PATCH',`/admin/bookings/${ref}/status`,{status});if(r&&r.emailSent)toast('Status updated — email sent to client');else toast('Status updated');loadBookings();loadStats();}
+async function sendReminders(){toast('Sending reminders...');try{const r=await q('POST','/admin/send-reminders');toast(`Sent ${r.sent||0} reminders`);}catch{toast('Failed',false);}}
 
 // ---- SUBSCRIBERS ----
 async function loadSubscribers(){const ss=await q('GET','/admin/subscribers')||[];const t=document.getElementById('sTbl');if(!ss.length){t.innerHTML='<tr><td colspan="3"><div class="empty"><i class="fas fa-users"></i><p>No subscribers.</p></div></td></tr>';return;}t.innerHTML=ss.map(s=>`<tr><td>${esc(s.email)}</td><td>${fd(s.subscribed_at)}</td><td><button class="btn btn-danger btn-sm" onclick="delSub(${s.id})"><i class="fas fa-trash"></i></button></td></tr>`).join('');}
@@ -619,6 +759,72 @@ async function resetRevenue(){
 
 // ---- BACKUP ----
 async function doBackup(){toast('Backing up...');try{const r=await q('POST','/admin/backup');if(r.ok)toast('Backup created!');else toast(r.error||'Failed','err');}catch(e){toast('Backup failed',false);}}
+
+// ---- BLOG ----
+let allPosts=[];
+async function loadBlog(){allPosts=await q('GET','/admin/blog')||[];const t=document.getElementById('blogTbl');if(!allPosts.length){t.innerHTML='<tr><td colspan="6"><div class="empty"><i class="fas fa-blog"></i><p>No blog posts yet.</p></div></td></tr>';return;}t.innerHTML=allPosts.map(p=>`<tr><td><strong>${esc(p.title)}</strong><br><span style="font-size:.72rem;color:var(--muted)">/blog/${esc(p.slug)}</span></td><td><span class="tg">${esc(p.category)}</span></td><td><span class="sb sb-${p.status==='published'?'visible':'pending'}">${p.status}</span></td><td>${p.views||0}</td><td>${fd(p.created_at)}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="editBlog(${p.id})"><i class="fas fa-edit"></i></button><a href="/blog/${esc(p.slug)}" target="_blank" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i></a><button class="btn btn-danger btn-sm" onclick="delBlog(${p.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function openBlogEditor(post){document.getElementById('blogModalTitle').textContent=post?'Edit Post':'New Post';document.getElementById('blogEditId').value=post?post.id:'';document.getElementById('blogTitle').value=post?post.title:'';document.getElementById('blogCategory').value=post?post.category:'general';document.getElementById('blogExcerpt').value=post?post.excerpt:'';document.getElementById('blogContent').value=post?post.content:'';const tags=post?Array.isArray(post.tags)?post.tags:(()=>{try{return JSON.parse(post.tags||'[]')}catch{return[]}})():[];document.getElementById('blogTags').value=tags.join(', ');document.getElementById('blogCover').value=post?post.cover_image:'';document.getElementById('blogAuthor').value=post?post.author:'Admin';document.getElementById('blogStatus').value=post?post.status:'draft';document.getElementById('blogModal').classList.add('show');}
+function editBlog(id){const p=allPosts.find(x=>x.id===id);if(p)openBlogEditor(p);}
+async function saveBlogPost(){const eid=document.getElementById('blogEditId').value;const data={title:document.getElementById('blogTitle').value.trim(),category:document.getElementById('blogCategory').value,excerpt:document.getElementById('blogExcerpt').value.trim(),content:document.getElementById('blogContent').value,tags:JSON.stringify(document.getElementById('blogTags').value.split(',').map(s=>s.trim()).filter(Boolean)),cover_image:document.getElementById('blogCover').value.trim(),author:document.getElementById('blogAuthor').value.trim(),status:document.getElementById('blogStatus').value};if(!data.title||!data.content){alert('Title and content required.');return;}if(eid)await q('PUT',`/admin/blog/${eid}`,data);else await q('POST','/admin/blog',data);cM('blogModal');loadBlog();toast(eid?'Post updated!':'Post created!');}
+async function delBlog(id){if(!confirm('Delete this blog post?'))return;await q('DELETE',`/admin/blog/${id}`);loadBlog();}
+
+// ---- FAQS ----
+let allFaqs=[];
+async function loadFaqs(){allFaqs=await q('GET','/admin/faqs')||[];const t=document.getElementById('faqTbl');if(!allFaqs.length){t.innerHTML='<tr><td colspan="4"><div class="empty"><i class="fas fa-question-circle"></i><p>No FAQs yet.</p></div></td></tr>';return;}t.innerHTML=allFaqs.map(f=>`<tr><td>${f.sort_order}</td><td><strong>${esc(f.question)}</strong><br><span style="font-size:.75rem;color:var(--muted)">${esc((f.answer||'').substring(0,80))}...</span></td><td><span class="sb sb-${f.is_visible?'visible':'hidden'}">${f.is_visible?'Visible':'Hidden'}</span></td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="editFaq(${f.id})"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delFaq(${f.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function openFaqEditor(faq){document.getElementById('faqModalTitle').textContent=faq?'Edit FAQ':'Add FAQ';document.getElementById('faqEditId').value=faq?faq.id:'';document.getElementById('faqQuestion').value=faq?faq.question:'';document.getElementById('faqAnswer').value=faq?faq.answer:'';document.getElementById('faqOrder').value=faq?faq.sort_order:0;document.getElementById('faqVisible').value=faq?faq.is_visible:1;document.getElementById('faqModal').classList.add('show');}
+function editFaq(id){const f=allFaqs.find(x=>x.id===id);if(f)openFaqEditor(f);}
+async function saveFaq(){const eid=document.getElementById('faqEditId').value;const data={question:document.getElementById('faqQuestion').value.trim(),answer:document.getElementById('faqAnswer').value.trim(),sort_order:parseInt(document.getElementById('faqOrder').value)||0,is_visible:parseInt(document.getElementById('faqVisible').value)};if(!data.question||!data.answer){alert('Question and answer required.');return;}if(eid)await q('PUT',`/admin/faqs/${eid}`,data);else await q('POST','/admin/faqs',data);cM('faqModal');loadFaqs();toast(eid?'FAQ updated!':'FAQ added!');}
+async function delFaq(id){if(!confirm('Delete this FAQ?'))return;await q('DELETE',`/admin/faqs/${id}`);loadFaqs();}
+
+// ---- DISCOUNTS ----
+let allDiscs=[];
+async function loadDiscounts(){allDiscs=await q('GET','/admin/discounts')||[];const t=document.getElementById('discTbl');if(!allDiscs.length){t.innerHTML='<tr><td colspan="8"><div class="empty"><i class="fas fa-tags"></i><p>No discount codes.</p></div></td></tr>';return;}t.innerHTML=allDiscs.map(d=>`<tr><td><code style="font-weight:700">${esc(d.code)}</code></td><td>${d.type}</td><td>${d.type==='percentage'?d.value+'%':'$'+d.value}</td><td>${d.min_order?'$'+d.min_order:'—'}</td><td>${d.used_count}${d.max_uses?' / '+d.max_uses:' / ∞'}</td><td><span class="sb sb-${d.is_active?'visible':'hidden'}">${d.is_active?'Active':'Inactive'}</span></td><td>${d.expires_at?fd(d.expires_at):'Never'}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="editDiscount(${d.id})"><i class="fas fa-edit"></i></button><button class="btn btn-outline btn-sm" onclick="toggleDiscount(${d.id},${d.is_active?0:1})"><i class="fas fa-${d.is_active?'pause':'play'}"></i></button><button class="btn btn-danger btn-sm" onclick="delDiscount(${d.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function openDiscountEditor(disc){document.getElementById('discModalTitle').textContent=disc?'Edit Discount':'New Discount Code';document.getElementById('discEditId').value=disc?disc.id:'';document.getElementById('discCode').value=disc?disc.code:'';document.getElementById('discType').value=disc?disc.type:'percentage';document.getElementById('discValue').value=disc?disc.value:'';document.getElementById('discMinOrder').value=disc?disc.min_order:0;document.getElementById('discMaxUses').value=disc?disc.max_uses:0;document.getElementById('discExpires').value=disc&&disc.expires_at?disc.expires_at.slice(0,16):'';document.getElementById('discountModal').classList.add('show');}
+function editDiscount(id){const d=allDiscs.find(x=>x.id===id);if(d)openDiscountEditor(d);}
+async function saveDiscount(){const eid=document.getElementById('discEditId').value;const data={code:document.getElementById('discCode').value.trim().toUpperCase(),type:document.getElementById('discType').value,value:parseFloat(document.getElementById('discValue').value)||0,min_order:parseFloat(document.getElementById('discMinOrder').value)||0,max_uses:parseInt(document.getElementById('discMaxUses').value)||0,expires_at:document.getElementById('discExpires').value||null};if(!data.code||!data.value){alert('Code and value required.');return;}if(eid)await q('PUT',`/admin/discounts/${eid}`,data);else await q('POST','/admin/discounts',data);cM('discountModal');loadDiscounts();toast(eid?'Discount updated!':'Discount created!');}
+async function toggleDiscount(id,active){await q('PATCH',`/admin/discounts/${id}/toggle`,{is_active:active});loadDiscounts();toast(active?'Activated':'Deactivated');}
+async function delDiscount(id){if(!confirm('Delete this discount code?'))return;await q('DELETE',`/admin/discounts/${id}`);loadDiscounts();}
+
+// ---- REFERRALS ----
+let allRefs=[];
+async function loadReferrals(){allRefs=await q('GET','/admin/referrals')||[];const t=document.getElementById('refTbl');if(!allRefs.length){t.innerHTML='<tr><td colspan="7"><div class="empty"><i class="fas fa-share-alt"></i><p>No referrals yet.</p></div></td></tr>';return;}t.innerHTML=allRefs.map(r=>`<tr><td><code style="font-weight:700">${esc(r.code)}</code></td><td>${esc(r.referrer_name)}<br><span style="font-size:.73rem;color:var(--muted)">${esc(r.referrer_email||'')}</span></td><td>${r.discount_percent}%</td><td>${r.uses||0}</td><td>$${r.earnings||0}</td><td><span class="sb sb-${r.is_active?'visible':'hidden'}">${r.is_active?'Active':'Inactive'}</span></td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="editRef(${r.id})"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="delRef(${r.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function openReferralEditor(ref){document.getElementById('refModalTitle').textContent=ref?'Edit Referral':'New Referral';document.getElementById('refEditId').value=ref?ref.id:'';document.getElementById('refCode').value=ref?ref.code:'';document.getElementById('refName').value=ref?ref.referrer_name:'';document.getElementById('refEmail').value=ref?ref.referrer_email:'';document.getElementById('refDiscount').value=ref?ref.discount_percent:10;document.getElementById('referralModal').classList.add('show');}
+function editRef(id){const r=allRefs.find(x=>x.id===id);if(r)openReferralEditor(r);}
+async function saveReferral(){const eid=document.getElementById('refEditId').value;const data={code:document.getElementById('refCode').value.trim().toUpperCase(),referrer_name:document.getElementById('refName').value.trim(),referrer_email:document.getElementById('refEmail').value.trim(),discount_percent:parseInt(document.getElementById('refDiscount').value)||10};if(!data.code||!data.referrer_name){alert('Code and referrer name required.');return;}if(eid)await q('PUT',`/admin/referrals/${eid}`,data);else await q('POST','/admin/referrals',data);cM('referralModal');loadReferrals();toast(eid?'Referral updated!':'Referral created!');}
+async function delRef(id){if(!confirm('Delete this referral?'))return;await q('DELETE',`/admin/referrals/${id}`);loadReferrals();}
+
+// ---- DELIVERIES ----
+let allDelivs=[];
+async function loadDeliveries(){allDelivs=await q('GET','/admin/deliveries')||[];const t=document.getElementById('delivTbl');if(!allDelivs.length){t.innerHTML='<tr><td colspan="6"><div class="empty"><i class="fas fa-cloud-upload-alt"></i><p>No deliveries yet.</p></div></td></tr>';return;}t.innerHTML=allDelivs.map(d=>`<tr><td><code>${esc(d.booking_ref)}</code></td><td><i class="fas fa-file" style="margin-right:.3rem"></i>${esc(d.original_name)}</td><td>${formatSize(d.file_size)}</td><td>${d.download_count}</td><td>${fd(d.created_at)}</td><td><div class="ac"><button class="btn btn-outline btn-sm" onclick="copyLink('${esc(d.download_token)}')" title="Copy link"><i class="fas fa-link"></i></button><button class="btn btn-danger btn-sm" onclick="delDelivery(${d.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('');}
+function formatSize(bytes){if(!bytes)return'—';if(bytes<1024)return bytes+'B';if(bytes<1048576)return(bytes/1024).toFixed(1)+'KB';return(bytes/1048576).toFixed(1)+'MB';}
+function openDeliveryUpload(){document.getElementById('delivRef').value='';document.getElementById('delivFile').value='';document.getElementById('deliveryModal').classList.add('show');}
+async function uploadDelivery(){const ref=document.getElementById('delivRef').value.trim();const file=document.getElementById('delivFile').files[0];if(!ref||!file){alert('Booking reference and file required.');return;}toast('Uploading...');const formData=new FormData();formData.append('file',file);try{const r=await fetch(API+'/admin/deliveries/'+encodeURIComponent(ref),{method:'POST',headers:{Authorization:auth},body:formData});const d=await r.json();if(r.ok){cM('deliveryModal');loadDeliveries();toast('File delivered!');}else{toast(d.error||'Upload failed',false);}}catch{toast('Upload failed',false);}}
+function copyLink(token){const url=location.origin+'/api/delivery/download/'+token;navigator.clipboard.writeText(url).then(()=>toast('Download link copied!')).catch(()=>{prompt('Copy this link:',url);});}
+async function delDelivery(id){if(!confirm('Delete this delivery?'))return;await q('DELETE',`/admin/deliveries/file/${id}`);loadDeliveries();}
+
+// ---- ANALYTICS ----
+async function loadAnalytics(){try{const a=await q('GET','/admin/analytics');if(!a)return;document.getElementById('aViews').textContent=a.pageViews||0;document.getElementById('aVisitors').textContent=a.uniqueVisitors||0;document.getElementById('aBookings').textContent=a.recentBookings||0;document.getElementById('aRevenue').textContent='$'+(a.recentRevenue||0);const tp=document.getElementById('topPagesTbl');if(a.topPages&&a.topPages.length){tp.innerHTML=a.topPages.map(p=>`<tr><td>${esc(p.page)}</td><td><strong>${p.views}</strong></td></tr>`).join('');}else{tp.innerHTML='<tr><td colspan="2" class="empty">No data yet</td></tr>';}const ps=document.getElementById('popSvcTbl');if(a.popularServices&&a.popularServices.length){ps.innerHTML=a.popularServices.map(s=>`<tr><td>${esc(s.service)}</td><td>${s.count}</td><td>$${s.revenue||0}</td></tr>`).join('');}else{ps.innerHTML='<tr><td colspan="3" class="empty">No data yet</td></tr>';}const mr=document.getElementById('monthRevTbl');if(a.monthlyRevenue&&a.monthlyRevenue.length){mr.innerHTML=a.monthlyRevenue.map(m=>`<tr><td>${esc(m.month)}</td><td>${m.count}</td><td><strong>$${m.revenue}</strong></td></tr>`).join('');}else{mr.innerHTML='<tr><td colspan="3" class="empty">No data yet</td></tr>';}}catch{}}
+
+// ---- ACTIVITY LOG ----
+async function loadActivity(){try{const acts=await q('GET','/admin/activity')||[];const t=document.getElementById('actTbl');if(!acts.length){t.innerHTML='<tr><td colspan="4"><div class="empty"><i class="fas fa-history"></i><p>No activity logged yet.</p></div></td></tr>';return;}t.innerHTML=acts.map(a=>`<tr><td style="font-size:.78rem;white-space:nowrap">${fd(a.created_at)}</td><td>${esc(a.user||'system')}</td><td><strong>${esc(a.action)}</strong></td><td style="font-size:.82rem;color:var(--muted)">${esc(a.details||'')}</td></tr>`).join('');}catch{}}
+
+// ---- ADMIN USERS ----
+let allAdmins=[];
+async function loadAdminUsers(){try{allAdmins=await q('GET','/admin/users')||[];const t=document.getElementById('adminTbl');if(!allAdmins.length){t.innerHTML='<tr><td colspan="4"><div class="empty"><i class="fas fa-user-shield"></i><p>No admin users.</p></div></td></tr>';return;}t.innerHTML=allAdmins.map(u=>`<tr><td><strong>${esc(u.username)}</strong></td><td><span class="sb sb-${u.role==='admin'?'visible':'pending'}">${u.role||'admin'}</span></td><td>${fd(u.created_at)}</td><td><div class="ac">${allAdmins.length>1?`<button class="btn btn-danger btn-sm" onclick="delAdmin(${u.id})"><i class="fas fa-trash"></i></button>`:''}</div></td></tr>`).join('');}catch{}}
+function openAdminUserEditor(){document.getElementById('adminModalTitle').textContent='Add Admin User';document.getElementById('adminEditId').value='';document.getElementById('adminUsername').value='';document.getElementById('adminPassword').value='';document.getElementById('adminRole').value='admin';document.getElementById('adminUserModal').classList.add('show');}
+async function saveAdminUser(){const data={username:document.getElementById('adminUsername').value.trim(),password:document.getElementById('adminPassword').value,role:document.getElementById('adminRole').value};if(!data.username||!data.password){alert('Username and password required.');return;}if(data.password.length<6){alert('Password must be at least 6 characters.');return;}await q('POST','/admin/users',data);cM('adminUserModal');loadAdminUsers();toast('Admin user created!');}
+async function delAdmin(id){if(!confirm('Delete this admin user?'))return;await q('DELETE',`/admin/users/${id}`);loadAdminUsers();}
+
+// ---- BOOKING NOTES ----
+async function openNotes(ref){document.getElementById('notesRef').value=ref;document.getElementById('newNote').value='';const notes=await q('GET',`/admin/bookings/${ref}/notes`)||[];const nl=document.getElementById('notesList');if(notes.length){nl.innerHTML=notes.map(n=>`<div style="padding:.6rem .8rem;background:#fafafa;border-radius:var(--r);margin-bottom:.5rem;font-size:.84rem"><div style="color:var(--muted);font-size:.72rem;margin-bottom:.2rem">${esc(n.author||'Admin')} — ${fd(n.created_at)}</div>${esc(n.note)}</div>`).join('');}else{nl.innerHTML='<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem">No notes yet.</p>';}document.getElementById('notesModal').classList.add('show');}
+async function addNote(){const ref=document.getElementById('notesRef').value;const note=document.getElementById('newNote').value.trim();if(!note){alert('Please enter a note.');return;}await q('POST',`/admin/bookings/${ref}/notes`,{note});openNotes(ref);toast('Note added!');}
+
+// ---- NEWSLETTER ----
+function openNewsletter(){document.getElementById('newsletterPanel').style.display='block';document.getElementById('nlSubject').value='';document.getElementById('nlBody').value='';document.getElementById('nlSubject').focus();}
+async function sendNewsletter(){const subject=document.getElementById('nlSubject').value.trim();const body=document.getElementById('nlBody').value.trim();if(!subject||!body){alert('Subject and message required.');return;}if(!confirm(`Send this newsletter to all subscribers?`))return;toast('Sending newsletter...');try{const r=await q('POST','/admin/newsletter/send',{subject,message:body});toast(`Newsletter sent to ${r.sent||0} subscribers!`);document.getElementById('newsletterPanel').style.display='none';}catch{toast('Failed to send',false);}}
+
+// ---- CSV EXPORT ----
+async function exportCSV(type){try{const r=await fetch(API+`/admin/export/${type}`,{headers:{Authorization:auth}});if(!r.ok){toast('Export failed',false);return;}const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=type+'_export.csv';a.click();URL.revokeObjectURL(url);toast('CSV downloaded!');}catch{toast('Export failed',false);}}
 </script>
 </body>
 </html>

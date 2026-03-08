@@ -1045,3 +1045,208 @@ function darkenColor(hex, percent) {
     const amt = 1 - percent/100;
     return rgbToHex(r*amt, g*amt, b*amt);
 }
+
+// ============================================================
+// DARK MODE
+// ============================================================
+function initDarkMode() {
+    const toggle = document.getElementById('darkModeToggle');
+    if (!toggle) return;
+    // Check saved preference
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+    toggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    });
+}
+initDarkMode();
+
+// ============================================================
+// FAQ — Load from API + Toggle
+// ============================================================
+async function loadFAQs() {
+    try {
+        const res = await fetch(`${CONFIG.API_URL}/faqs`);
+        if (!res.ok) return;
+        const faqs = await res.json();
+        if (!faqs.length) return;
+        const list = document.getElementById('faq-list');
+        if (!list) return;
+        list.innerHTML = faqs.map(f => `
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    <span>${f.question}</span><i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer"><p>${f.answer}</p></div>
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+function toggleFAQ(btn) {
+    const item = btn.closest('.faq-item');
+    const wasActive = item.classList.contains('active');
+    // Close all
+    document.querySelectorAll('.faq-item.active').forEach(i => i.classList.remove('active'));
+    // Toggle clicked
+    if (!wasActive) item.classList.add('active');
+}
+window.toggleFAQ = toggleFAQ;
+loadFAQs();
+
+// ============================================================
+// DISCOUNT / PROMO CODES
+// ============================================================
+let appliedDiscount = null;
+
+async function applyDiscount() {
+    const codeInput = document.getElementById('discount-code');
+    const msg = document.getElementById('discount-msg');
+    const code = (codeInput?.value || '').trim();
+    if (!code) { msg.textContent = 'Enter a code'; msg.className = 'error'; return; }
+
+    // First try discount code
+    try {
+        const totalEl = document.getElementById('grand-total');
+        const currentTotal = parseFloat(totalEl?.textContent.replace(/[^0-9.]/g, '')) || 0;
+
+        let res = await fetch(`${CONFIG.API_URL}/discount/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, amount: currentTotal })
+        });
+
+        if (res.ok) {
+            const d = await res.json();
+            appliedDiscount = { code: d.code, amount: d.discount, type: d.type, value: d.value };
+            msg.textContent = `${d.type === 'percentage' ? d.value + '%' : '$' + d.value} discount applied!`;
+            msg.className = 'success';
+            updateTotals();
+            return;
+        }
+
+        // Try referral code
+        res = await fetch(`${CONFIG.API_URL}/referral/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+
+        if (res.ok) {
+            const r = await res.json();
+            appliedDiscount = { code, amount: 0, type: 'percentage', value: r.discount_percent, isReferral: true };
+            msg.textContent = `${r.discount_percent}% referral discount from ${r.referrer_name || 'a friend'}!`;
+            msg.className = 'success';
+            updateTotals();
+            return;
+        }
+
+        msg.textContent = 'Invalid code';
+        msg.className = 'error';
+        appliedDiscount = null;
+        updateTotals();
+    } catch(e) {
+        msg.textContent = 'Could not validate code';
+        msg.className = 'error';
+    }
+}
+window.applyDiscount = applyDiscount;
+
+function updateTotals() {
+    const basePrice = parseInt(document.getElementById('service-type')?.selectedOptions[0]?.dataset.price) || 0;
+    let addonsTotal = 0;
+    document.querySelectorAll('.addon-item.selected').forEach(item => {
+        addonsTotal += parseInt(item.dataset.price) || 0;
+    });
+    let total = basePrice + addonsTotal;
+
+    // Apply discount
+    const discountRow = document.getElementById('discount-row');
+    const discountAmountEl = document.getElementById('discount-amount');
+    if (appliedDiscount && total > 0) {
+        let disc = appliedDiscount.type === 'percentage' ? Math.round(total * appliedDiscount.value / 100) : appliedDiscount.value;
+        disc = Math.min(disc, total);
+        appliedDiscount.amount = disc;
+        if (discountRow) discountRow.style.display = 'flex';
+        if (discountAmountEl) discountAmountEl.textContent = currentCurrency === 'GHS' ? `-GH₵${Math.round(disc * ghsRate)}` : `-$${disc}`;
+        total -= disc;
+    } else {
+        if (discountRow) discountRow.style.display = 'none';
+    }
+
+    const prefix = currentCurrency === 'GHS' ? 'GH₵' : '$';
+    const rate = currentCurrency === 'GHS' ? ghsRate : 1;
+    if (document.getElementById('base-price')) document.getElementById('base-price').textContent = `${prefix}${Math.round(basePrice * rate)}`;
+    if (document.getElementById('addons-total')) document.getElementById('addons-total').textContent = `${prefix}${Math.round(addonsTotal * rate)}`;
+    if (document.getElementById('grand-total')) document.getElementById('grand-total').textContent = `${prefix}${Math.round(total * rate)}`;
+    if (document.getElementById('summary-total')) document.getElementById('summary-total').textContent = `${prefix}${Math.round(total * rate)}`;
+}
+
+// ============================================================
+// ANALYTICS — Track Page Views
+// ============================================================
+(function trackPage() {
+    try {
+        fetch(`${CONFIG.API_URL}/track`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ page: location.pathname + location.hash })
+        }).catch(() => {});
+    } catch(e) {}
+})();
+
+// ============================================================
+// WHATSAPP WIDGET
+// ============================================================
+function initWhatsApp() {
+    const widget = document.getElementById('whatsappWidget');
+    if (!widget || !siteSettings.phone) return;
+    // Extract phone number digits
+    const phone = (siteSettings.social_whatsapp || siteSettings.phone || '').replace(/[^0-9+]/g, '');
+    if (!phone || phone === '+233000000000') return;
+    const cleanPhone = phone.replace(/^\+/, '');
+    widget.href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Hi! I\'m interested in your creative services.')}`;
+    widget.style.display = 'flex';
+}
+
+// ============================================================
+// MULTI-LANGUAGE (i18n) — English / French / Twi
+// ============================================================
+const translations = {
+    en: {},
+    fr: {
+        faq_tag: 'Questions fréquentes',
+        faq_title: 'Questions Fréquemment Posées',
+    },
+    tw: {
+        faq_tag: 'Nsɛmmisa a wɔbisa no daa',
+        faq_title: 'Nsɛmmisa a Wɔbisa No Daa',
+    }
+};
+
+function setLanguage(lang) {
+    localStorage.setItem('lang', lang);
+    const t = translations[lang] || {};
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (t[key]) el.textContent = t[key];
+    });
+}
+
+function initLanguage() {
+    const switcher = document.getElementById('langSwitcher');
+    if (!switcher) return;
+    const saved = localStorage.getItem('lang') || 'en';
+    switcher.value = saved;
+    if (saved !== 'en') setLanguage(saved);
+    switcher.addEventListener('change', (e) => setLanguage(e.target.value));
+}
+initLanguage();
+
+// Call WhatsApp init after settings load
+const origLoadSettings = loadSiteSettings;
+loadSiteSettings = async function() {
+    await origLoadSettings();
+    initWhatsApp();
+};

@@ -4,6 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CreativeStudio | Design & Motion Services</title>
+    <meta name="description" content="Professional graphic design, video editing, motion graphics & branding services. Fast turnaround, premium quality. Based in Accra, Ghana — Available Worldwide.">
+    <meta name="keywords" content="graphic design, video editing, motion graphics, branding, logo design, Accra, Ghana, creative studio">
+    <meta name="author" content="CreativeStudio">
+    <meta name="robots" content="index, follow">
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="CreativeStudio | Design & Motion Services">
+    <meta property="og:description" content="Professional graphic design, video editing, motion graphics & branding services. Fast turnaround, premium quality.">
+    <meta property="og:image" content="/uploads/og-image.jpg">
+    <meta property="og:url" content="/">
+    <meta name="twitter:card" content="summary_large_image">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a2744">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "CreativeStudio",
+        "description": "Professional graphic design, video editing, motion graphics & branding services",
+        "address": { "@type": "PostalAddress", "addressLocality": "Accra", "addressCountry": "GH" },
+        "priceRange": "$199 - $599",
+        "serviceType": ["Graphic Design", "Video Editing", "Motion Graphics", "Branding"]
+    }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
@@ -21,10 +50,17 @@
                     <a href="#portfolio">Portfolio</a>
                     <a href="#about">About</a>
                     <a href="#testimonials">Reviews</a>
+                    <a href="#faq">FAQ</a>
                     <a href="#contact">Contact</a>
                 </div>
                 <div class="nav-cta">
+                    <button class="dark-mode-toggle" id="darkModeToggle" title="Toggle dark mode"><i class="fas fa-moon"></i></button>
                     <button class="currency-toggle" id="currencyToggle" title="Switch currency"><span class="cur-active">USD</span> / <span>GHS</span></button>
+                    <select class="lang-switcher" id="langSwitcher" title="Language">
+                        <option value="en">EN</option>
+                        <option value="fr">FR</option>
+                        <option value="tw">TWI</option>
+                    </select>
                     <a href="#tracker" class="btn btn-outline btn-sm" style="font-size:.78rem;padding:.4rem .8rem">Track Booking</a>
                     <a href="#booking" class="btn btn-primary">Start Project <i class="fas fa-arrow-right" style="font-size:0.8rem"></i></a>
                     <button class="hamburger"><i class="fas fa-bars"></i></button>
@@ -230,6 +266,31 @@
         </div>
     </section>
 
+    <!-- ==================== FAQ ==================== -->
+    <section class="section section-light" id="faq">
+        <div class="container">
+            <div class="section-header reveal"><div class="section-tag" data-i18n="faq_tag">Common questions</div><h2 data-i18n="faq_title">Frequently Asked Questions</h2></div>
+            <div class="faq-list reveal" id="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)"><span>How long does a typical project take?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Most projects are completed within 3-7 business days. Rush delivery is available as an add-on for 50% faster turnaround.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)"><span>What payment methods do you accept?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>We accept credit/debit cards, mobile money, and bank transfers through Paystack, Ghana's leading payment gateway.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)"><span>How many revisions are included?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Each project includes 2 rounds of revisions. You can purchase additional revision rounds as an add-on.</p></div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)"><span>Can I get source files?</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer"><p>Yes! Source files (PSD, AI, AEP, etc.) are available as an add-on purchase with your project.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ==================== CTA BANNER ==================== -->
     <div class="cta-banner">
         <div class="container">
@@ -347,9 +408,18 @@
                         <div class="addon-item" data-price="29"><div class="addon-info"><div class="addon-checkbox"></div><div><h4>Extra Revisions</h4><p>3 additional rounds</p></div></div><div class="addon-price" data-usd="29">+$29</div></div>
                         <div class="addon-item" data-price="99"><div class="addon-info"><div class="addon-checkbox"></div><div><h4>Social Media Kit</h4><p>Assets for all platforms</p></div></div><div class="addon-price" data-usd="99">+$99</div></div>
                     </div>
+                    <div class="discount-code-wrap" style="margin:1.5rem 0;padding:1rem 1.2rem;background:var(--cream);border-radius:var(--radius);border:1px dashed var(--border)">
+                        <label class="form-label" style="font-size:.85rem;margin-bottom:.4rem">Have a discount or referral code?</label>
+                        <div style="display:flex;gap:.5rem">
+                            <input type="text" class="form-control" id="discount-code" placeholder="Enter code" style="flex:1;text-transform:uppercase">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="applyDiscount()" style="white-space:nowrap">Apply</button>
+                        </div>
+                        <div id="discount-msg" style="font-size:.8rem;margin-top:.4rem"></div>
+                    </div>
                     <div class="total-section">
                         <div class="total-row"><span>Base Service</span><span id="base-price">$0</span></div>
                         <div class="total-row"><span>Add-ons</span><span id="addons-total">$0</span></div>
+                        <div class="total-row" id="discount-row" style="display:none;color:var(--success)"><span>Discount</span><span id="discount-amount">-$0</span></div>
                         <div class="total-row total"><span>Total</span><span id="grand-total">$0</span></div>
                     </div>
                     <div class="booking-footer">
@@ -447,7 +517,9 @@
                         <li><a href="#services">Services</a></li>
                         <li><a href="#portfolio">Portfolio</a></li>
                         <li><a href="#about">About</a></li>
-                        <li><a href="#testimonials">Testimonials</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                        <li><a href="/client">Client Portal</a></li>
                         <li><a href="#contact">Contact</a></li>
                     </ul>
                 </div>
@@ -488,6 +560,20 @@
         <div class="lightbox-caption" id="lightbox-caption"></div>
     </div>
 
+    <!-- WhatsApp Chat Widget -->
+    <a href="#" class="whatsapp-widget" id="whatsappWidget" target="_blank" rel="noopener" title="Chat on WhatsApp" style="display:none">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">Chat with us!</span>
+    </a>
+
     <script src="js/main.js"></script>
+    <script>
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+    }
+    </script>
 </body>
 </html>
