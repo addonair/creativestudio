@@ -31,7 +31,95 @@
         .toast{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;padding:.8rem 1.2rem;background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.1);font-size:.88rem;display:none;align-items:center;gap:.6rem;max-width:380px}.toast.show{display:flex;animation:slideIn .3s ease}.toast.ok{border-left:3px solid var(--success)}.toast.err{border-left:3px solid var(--error)}@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
         .section{display:none}.section.active{display:block}.tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border)}.tab{padding:.6rem 1.2rem;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}.tab:hover{color:var(--text)}.tab.active{color:var(--navy);border-bottom-color:var(--warm)}
         .svc-card{border:1px solid var(--border);border-radius:var(--r);padding:1rem;margin-bottom:.8rem;position:relative}.svc-card .svc-del{position:absolute;top:.5rem;right:.5rem}
-        @media(max-width:768px){.sidebar{width:100%;position:relative;height:auto;padding:.8rem 0}.sidebar-nav{display:flex;overflow-x:auto}.sidebar-nav a{padding:.5rem .8rem;white-space:nowrap;font-size:.75rem;border-right:none!important}.sidebar-bottom,.sidebar-label,.sidebar-divider{display:none}.main{margin-left:0;padding:1rem}.field-row,.field-row-3{grid-template-columns:1fr}td,th{padding:.4rem .5rem;font-size:.75rem}}
+        /* Mobile admin header — hidden on desktop */
+        .admin-mobile-header{display:none}
+        .admin-sidebar-backdrop{display:none}
+
+        @media(max-width:768px){
+            /* Mobile header bar */
+            .admin-mobile-header{display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;height:52px;background:var(--navy-deep);color:#fff;padding:0 1rem;z-index:101}
+            .admin-hamburger{background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;padding:.4rem}
+            .admin-mobile-title{font-size:1rem;font-weight:700}
+            .admin-mobile-site{color:rgba(255,255,255,.5);font-size:.9rem;padding:.4rem}
+
+            /* Sidebar: slide-out drawer */
+            .sidebar{transform:translateX(-100%);transition:transform .3s ease;width:260px;z-index:200}
+            .sidebar.open{transform:translateX(0)}
+
+            /* Backdrop */
+            .admin-sidebar-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;opacity:0;transition:opacity .3s ease;pointer-events:none}
+            .admin-sidebar-backdrop.active{opacity:1;pointer-events:auto}
+
+            /* Main content */
+            .main{margin-left:0;padding:.8rem;padding-top:60px;min-height:100vh}
+
+            /* Page header */
+            .page-header{flex-direction:column;align-items:flex-start;gap:.6rem;margin-bottom:1.2rem}
+            .page-header h1{font-size:1.2rem}
+            .page-header .btn{font-size:.76rem;padding:.4rem .8rem}
+
+            /* Stats grid */
+            .stats-grid{grid-template-columns:repeat(2,1fr);gap:.6rem}
+            .stat-card{padding:.8rem}
+            .stat-card .vl{font-size:1.3rem}
+            .stat-card .lb{font-size:.65rem}
+
+            /* Cards */
+            .card-header{padding:.6rem .8rem;font-size:.82rem;flex-wrap:wrap;gap:.5rem}
+            .card-body{padding:.8rem}
+
+            /* Tables — horizontal scroll */
+            .card-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
+            table{min-width:600px}
+            td,th{padding:.4rem .6rem;font-size:.75rem}
+
+            /* Form fields */
+            .field-row,.field-row-3{grid-template-columns:1fr}
+            .field input,.field select,.field textarea{font-size:.88rem;padding:.5rem .7rem}
+            .field label{font-size:.78rem}
+
+            /* Modals */
+            .modal-overlay{padding:.5rem}
+            .modal{border-radius:8px;max-height:95vh}
+            .modal-lg{max-width:100%}
+            .modal-header{padding:.8rem 1rem}
+            .modal-header h3{font-size:.95rem}
+            .modal-body{padding:1rem}
+            .modal-footer{padding:.6rem 1rem;flex-wrap:wrap}
+
+            /* Login box */
+            .login-box{padding:2rem 1.5rem;max-width:calc(100vw - 2rem);margin:0 1rem}
+            .login-box h2{font-size:1.3rem}
+
+            /* Buttons */
+            .btn{font-size:.78rem;padding:.45rem .9rem}
+            .btn-sm{padding:.25rem .5rem;font-size:.7rem}
+
+            /* Action buttons in tables */
+            .ac{gap:.3rem}
+
+            /* Tabs */
+            .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+            .tabs::-webkit-scrollbar{display:none}
+            .tab{padding:.5rem .8rem;font-size:.78rem;white-space:nowrap;flex-shrink:0}
+
+            /* Toast */
+            .toast{right:.8rem;left:.8rem;max-width:none;font-size:.82rem}
+
+            /* Upload area */
+            .upload-area{padding:1rem}
+
+            /* Misc */
+            .rp{max-width:120px}
+            .pt{width:44px;height:32px}
+            .svc-card{padding:.8rem}
+            .color-field{flex-wrap:wrap}
+        }
+
+        @media(max-width:400px){
+            .stats-grid{grid-template-columns:1fr}
+            .admin-mobile-title{font-size:.88rem}
+        }
     </style>
 </head>
 <body>
@@ -39,8 +127,16 @@
 <!-- LOGIN -->
 <div class="login-overlay" id="loginOverlay"><div class="login-box"><h2>Admin Login</h2><p>Sign in to manage your studio.</p><div class="login-error" id="loginError">Invalid credentials</div><form id="loginForm"><div class="field"><label>Username</label><input type="text" id="loginUser" required></div><div class="field"><label>Password</label><input type="password" id="loginPass" required></div><button type="submit" class="btn btn-primary" style="width:100%;margin-top:.5rem">Sign In</button></form></div></div>
 
+<!-- MOBILE ADMIN HEADER -->
+<div class="admin-mobile-header" id="adminMobileHeader">
+    <button class="admin-hamburger" id="adminHamburger"><i class="fas fa-bars"></i></button>
+    <span class="admin-mobile-title">Creative<span style="color:var(--warm)">.</span>Studio</span>
+    <a href="/" target="_blank" class="admin-mobile-site"><i class="fas fa-external-link-alt"></i></a>
+</div>
+<div class="admin-sidebar-backdrop" id="adminBackdrop"></div>
+
 <!-- SIDEBAR -->
-<div class="sidebar">
+<div class="sidebar" id="adminSidebar">
     <div class="sidebar-logo">Creative<span>.</span>Studio</div>
     <nav class="sidebar-nav">
         <a href="#" class="active" data-section="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
@@ -464,7 +560,11 @@ async function q(m,e,b){const o={method:m,headers:{Authorization:auth,'Content-T
 async function upld(f){const d=new FormData();d.append('image',f);const r=await fetch(API+'/admin/upload',{method:'POST',headers:{Authorization:auth},body:d});return r.json();}
 
 // ---- NAV ----
-document.querySelectorAll('.sidebar-nav a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();document.querySelectorAll('.sidebar-nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('sec-'+a.dataset.section).classList.add('active');});});
+document.querySelectorAll('.sidebar-nav a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();document.querySelectorAll('.sidebar-nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('sec-'+a.dataset.section).classList.add('active');closeAdminSidebar();});});
+// ---- MOBILE SIDEBAR TOGGLE ----
+function closeAdminSidebar(){const sb=document.getElementById('adminSidebar');const bd=document.getElementById('adminBackdrop');if(sb)sb.classList.remove('open');if(bd)bd.classList.remove('active');document.body.style.overflow='';}
+function openAdminSidebar(){const sb=document.getElementById('adminSidebar');const bd=document.getElementById('adminBackdrop');if(sb)sb.classList.add('open');if(bd)bd.classList.add('active');document.body.style.overflow='hidden';}
+(function(){const hb=document.getElementById('adminHamburger');const bd=document.getElementById('adminBackdrop');if(hb)hb.addEventListener('click',()=>{const sb=document.getElementById('adminSidebar');sb.classList.contains('open')?closeAdminSidebar():openAdminSidebar();});if(bd)bd.addEventListener('click',closeAdminSidebar);})();
 function cM(id){document.getElementById(id).classList.remove('show');}
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
 function toast(msg,ok=true){const t=document.getElementById('toast');t.className='toast show '+(ok?'ok':'err');t.querySelector('i').className='fas '+(ok?'fa-check-circle':'fa-exclamation-circle');document.getElementById('toastMsg').textContent=msg;setTimeout(()=>t.classList.remove('show'),3000);}
